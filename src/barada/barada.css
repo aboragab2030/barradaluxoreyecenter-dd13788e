@@ -1,0 +1,141 @@
+/* --- Base Styles --- */
+:root {
+  --print-font-size: 10pt;
+  --print-margin: 15mm;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.gstatic.com/s/cairo/v28/SLXGc1jYS7i8UUDI2eXm7_K2Hw.woff2') format('woff2');
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Print Strategy --- */
+@media print {
+  /* 1. Global Reset for Print */
+  @page {
+    margin: var(--print-margin);
+    size: auto;
+  }
+
+  /* 2. Remove Non-Essential UI Elements */
+  nav, 
+  footer, 
+  aside, 
+  button,
+  .no-print,
+  #ai-assistant,
+  [role="button"],
+  .fixed,
+  .sticky {
+    display: none !important;
+  }
+
+  /* 3. Layout Optimization */
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: var(--print-font-size);
+    line-height: 1.4;
+  }
+
+  main, 
+  .max-w-7xl,
+  #admin,
+  #home {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    float: none !important;
+    position: static !important;
+  }
+
+  /* 4. Medical Data Density (Tables & Lists) */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 1em !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th, td {
+    border: 0.5pt solid #ccc !important;
+    padding: 4pt 6pt !important;
+    text-align: right !important;
+    font-size: 9pt !important;
+  }
+
+  th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+  }
+
+  /* 5. Content Visuals */
+  .bg-white, .bg-gray-50, .bg-blue-50 {
+    background-color: transparent !important;
+  }
+
+  .shadow-xl, .shadow-2xl, .shadow-sm, .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  .rounded-2xl, .rounded-3xl, .rounded-\[2\.5rem\], .rounded-\[3rem\] {
+    border-radius: 0 !important;
+  }
+
+  .border {
+    border: 0.5pt solid #eee !important;
+  }
+
+  img {
+    max-width: 100px !important;
+    filter: grayscale(100%);
+  }
+
+  /* 6. Typography & Clarity */
+  h1, h2, h3, h4 {
+    color: #000 !important;
+    margin-top: 0.5em !important;
+    margin-bottom: 0.3em !important;
+    page-break-after: avoid;
+  }
+
+  h1 { font-size: 18pt; }
+  h2 { font-size: 16pt; }
+  h3 { font-size: 14pt; }
+
+  /* 7. Ensure URL and internal links are clean */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #666;
+  }
+
+  /* 8. Breakpoints */
+  .grid {
+    display: block !important;
+  }
+
+  .flex {
+    display: block !important;
+  }
+
+  .shrink-0 {
+    display: none !important;
+  }
+}
