@@ -313,6 +313,47 @@ const generateTimeSlots = () => {
 
 const TIME_SLOTS = generateTimeSlots();
 
+// Helper: Convert Arabic time slot (e.g., "09:00 ص") to 24h minutes
+const timeSlotTo24hMinutes = (slot: string): number => {
+  const parts = slot.trim().split(' ');
+  const timePart = parts[0]; // "09:00"
+  const period = parts[1]; // "ص" or "م"
+  const [hourStr, minuteStr] = timePart.split(':');
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+  if (period === 'م' && hour !== 12) hour += 12;
+  if (period === 'ص' && hour === 12) hour = 0;
+  return hour * 60 + minute;
+};
+
+// Helper: Parse working hours text like "9:00 صباحاً - 9:00 مساءً" to { start, end } in minutes
+const parseWorkingHoursText = (text: string): { start: number; end: number } | null => {
+  try {
+    const parts = text.split('-').map(s => s.trim());
+    if (parts.length !== 2) return null;
+    const parseTime = (t: string): number => {
+      const match = t.match(/(\d{1,2}):(\d{2})\s*(صباحاً|مساءً|ص|م)/);
+      if (!match) return -1;
+      let hour = parseInt(match[1], 10);
+      const minute = parseInt(match[2], 10);
+      const period = match[3];
+      if (period === 'مساءً' || period === 'م') { if (hour !== 12) hour += 12; }
+      if (period === 'صباحاً' || period === 'ص') { if (hour === 12) hour = 0; }
+      return hour * 60 + minute;
+    };
+    const start = parseTime(parts[0]);
+    const end = parseTime(parts[1]);
+    if (start < 0 || end < 0) return null;
+    return { start, end };
+  } catch { return null; }
+};
+
+// Helper: Check if a given date is Friday
+const isFriday = (dateStr: string): boolean => {
+  const d = new Date(dateStr);
+  return d.getDay() === 5;
+};
+
 const AVAILABLE_PERMISSIONS: PermissionOption[] = [
   { id: 'manage_doctors', label: 'إدارة الأطباء' },
   { id: 'manage_bookings', label: 'إدارة الحجوزات' },
@@ -659,9 +700,10 @@ const BookingModal = ({
             setPhone2('');
             setAddress('');
             setService(services[0]?.title || '');
-            const initialDocId = doctor?.id || realtimeDoctors[0]?.id || 0;
+            // لا يتم تحديد طبيب افتراضي — يجب الاختيار يدوياً
+            const initialDocId = doctor?.id || 0;
             setSelectedDoctorId(initialDocId);
-            const initialDoc = realtimeDoctors.find(d => d.id === initialDocId);
+            const initialDoc = doctor ? realtimeDoctors.find(d => d.id === initialDocId) : null;
             const firstValidDate = initialDoc?.availableDates.find(d => d !== todayStr) || tomorrowStr;
             setDate(firstValidDate);
             setTime('');
@@ -710,6 +752,12 @@ const BookingModal = ({
 
     const handleNextStep = (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // === التحقق من اختيار الطبيب ===
+        if (!selectedDoctorId || selectedDoctorId === 0) {
+            alert('عذراً، يجب اختيار الطبيب أولاً.');
+            return;
+        }
         
         // === التحقق من أن الطبيب لديه أيام عمل محددة ===
         if (!currentSelectedDoctor || !currentSelectedDoctor.availableDates || currentSelectedDoctor.availableDates.length === 0) {
@@ -784,7 +832,7 @@ const BookingModal = ({
         
         // === منع الحجز في نفس اليوم ===
         if (date === todayStr) {
-            alert('عذراً، لا يمكن الحجز في نفس يوم اليوم. يرجى اختيار تاريخ غداً أو ما بعده.');
+            alert('عذراً، لا يمكن الحجز في نفس يوم اليوم. يرجى اختيار تاريخ بدءاً من الغد.');
             return;
         }
         
@@ -794,7 +842,20 @@ const BookingModal = ({
             return;
         }
 
-        // === منع تكرار اسم المريض في الحجوزات ===
+        // === التحقق من أن الوقت المختار داخل ساعات العمل ===
+        if (time) {
+            const friday = isFriday(date);
+            const hoursText = friday ? settings.workingHours.friday : settings.workingHours.weekdays;
+            const parsed = parseWorkingHoursText(hoursText);
+            if (parsed) {
+                const selectedMinutes = timeSlotTo24hMinutes(time);
+                if (selectedMinutes < parsed.start || selectedMinutes >= parsed.end) {
+                    alert(`عذراً، الوقت المختار خارج ساعات العمل (${hoursText}). يرجى اختيار وقت آخر ضمن ساعات العمل.`);
+                    return;
+                }
+            }
+        }
+
         const normalizedName = name.trim().toLowerCase().replace(/\s+/g, ' ');
         const existingPatientBooking = bookings.find(b => 
             b.patientName.trim().toLowerCase().replace(/\s+/g, ' ') === normalizedName && 
@@ -946,6 +1007,7 @@ const BookingModal = ({
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">الطبيب</label>
                     <select value={selectedDoctorId} onChange={e => setSelectedDoctorId(Number(e.target.value))} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                        <option value={0} disabled>-- اختر الطبيب --</option>
                         {realtimeDoctors.map(d => <option key={d.id} value={d.id}>د. {d.name} - {d.fee} ج.م</option>)}
                     </select>
                 </div>
@@ -3635,21 +3697,55 @@ const handleNavigate = (sectionId: string) => {
       addNotification('تم إرسال التذكير', 'تم إرسال رسالة التذكير بنجاح', 'success');
   };
 
+  // دالة استبدال المتغيرات في نص الرسالة
+  const fillReminderTemplate = (template: string, item: any): string => {
+      return template
+        .replace(/\[الاسم\]/g, item.patientName || '')
+        .replace(/\[التاريخ\]/g, item.date || '')
+        .replace(/\[الوقت\]/g, item.time || '')
+        .replace(/\[الطبيب\]/g, item.doctorName || '')
+        .replace(/\[الإجراء\]/g, item.service || '');
+  };
+
   const handleSmsReminder = (item: any) => {
-      alert(`تم إرسال SMS تذكير للمريض: ${item.patientName}\nنص الرسالة: ${item.itemType === 'booking' ? settings.reminderSettings.smsBody : settings.reminderSettings.opSmsBody}`);
+      const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.smsBody : settings.reminderSettings.opSmsBody;
+      const filledMessage = fillReminderTemplate(rawTemplate, item);
+      alert(`تم إرسال SMS تذكير للمريض: ${item.patientName}\nنص الرسالة:\n${filledMessage}`);
       handleSendReminder(item.id, item.itemType);
   };
 
   const handleWhatsAppReminder = (item: any) => {
       const phone = item.phone.startsWith('0') ? '+2' + item.phone : item.phone;
-      const text = encodeURIComponent(item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody);
+      const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody;
+      const filledMessage = fillReminderTemplate(rawTemplate, item);
+      const text = encodeURIComponent(filledMessage);
       window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
       handleSendReminder(item.id, item.itemType);
   };
 
-  const handleConfirmPayment = (id: number) => {
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, paymentStatus: 'paid' } : b));
-      addNotification('تأكيد الدفع', 'تم تأكيد استلام المبلغ بنجاح', 'success');
+  const handleConfirmPayment = async (id: number) => {
+      try {
+        // Find the original UUID from realtime data
+        const originalBooking = realtimeData.bookings.find((b: any) => 
+          parseInt(b.id.slice(-8), 16) === id
+        );
+        
+        if (originalBooking) {
+          const { error } = await supabase
+            .from('bookings')
+            .update({ payment_status: 'paid' })
+            .eq('id', originalBooking.id);
+            
+          if (error) throw error;
+        } else {
+          // Fallback to local update
+          setBookings(prev => prev.map(b => b.id === id ? { ...b, paymentStatus: 'paid' } : b));
+        }
+        addNotification('تأكيد الدفع', 'تم تأكيد استلام المبلغ بنجاح', 'success');
+      } catch (error) {
+        console.error('Error confirming payment:', error);
+        alert('حدث خطأ أثناء تأكيد الدفع');
+      }
   };
 
   return (

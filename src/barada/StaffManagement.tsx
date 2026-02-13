@@ -378,6 +378,65 @@ export function StaffManagement({ inputClass, cardClass, currentUserId }: StaffM
     return role === 'admin' ? Crown : UserCheck;
   };
 
+  // Add new user state
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({
+    email: '',
+    password: '',
+    name: '',
+    loginUsername: '',
+    role: 'staff' as 'admin' | 'staff',
+    permissions: [] as string[],
+  });
+  const [addingUser, setAddingUser] = useState(false);
+
+  const handleAddUser = async () => {
+    if (!addUserForm.email || !addUserForm.password || !addUserForm.name) {
+      toast.error('يرجى ملء البريد الإلكتروني وكلمة المرور والاسم');
+      return;
+    }
+    if (addUserForm.password.length < 6) {
+      toast.error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+    
+    setAddingUser(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('add-staff-user', {
+        body: {
+          email: addUserForm.email.trim(),
+          password: addUserForm.password,
+          name: addUserForm.name.trim(),
+          loginUsername: addUserForm.loginUsername.trim() || null,
+          role: addUserForm.role,
+          permissions: addUserForm.role === 'admin' ? AVAILABLE_PERMISSIONS.map(p => p.id) : addUserForm.permissions,
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success('تم إضافة المستخدم بنجاح');
+      setShowAddUser(false);
+      setAddUserForm({ email: '', password: '', name: '', loginUsername: '', role: 'staff', permissions: [] });
+      // Refresh the list
+      await fetchStaffMembers();
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      toast.error(error?.message || 'حدث خطأ أثناء إضافة المستخدم');
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
+  const handleToggleAddPermission = (permId: string) => {
+    setAddUserForm(prev => ({
+      ...prev,
+      permissions: prev.permissions.includes(permId)
+        ? prev.permissions.filter(p => p !== permId)
+        : [...prev.permissions, permId]
+    }));
+  };
+
   return (
     <div className="space-y-6">
       <div className={cardClass}>
@@ -386,15 +445,135 @@ export function StaffManagement({ inputClass, cardClass, currentUserId }: StaffM
             <UserCog className="w-6 h-6 text-blue-600" />
             <h3 className="text-xl font-bold">إدارة الموظفين المسجلين</h3>
           </div>
-          <button
-            onClick={fetchStaffMembers}
-            disabled={loading}
-            className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
-          >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            تحديث
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowAddUser(!showAddUser)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+            >
+              <User size={16} />
+              إضافة مستخدم
+            </button>
+            <button
+              onClick={fetchStaffMembers}
+              disabled={loading}
+              className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              تحديث
+            </button>
+          </div>
         </div>
+
+        {/* Add User Form */}
+        {showAddUser && (
+          <div className="mb-6 p-6 bg-gray-50 rounded-2xl border border-blue-100 space-y-4">
+            <h4 className="font-bold text-gray-900 flex items-center gap-2">
+              <User size={18} className="text-blue-600" />
+              إضافة مستخدم جديد
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 mb-1 block">الاسم الكامل *</label>
+                <input
+                  type="text"
+                  value={addUserForm.name}
+                  onChange={e => setAddUserForm({ ...addUserForm, name: e.target.value })}
+                  className={inputClass}
+                  placeholder="أدخل اسم الموظف"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 mb-1 block">البريد الإلكتروني *</label>
+                <input
+                  type="email"
+                  value={addUserForm.email}
+                  onChange={e => setAddUserForm({ ...addUserForm, email: e.target.value })}
+                  className={inputClass}
+                  placeholder="example@email.com"
+                  dir="ltr"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 mb-1 block">كلمة المرور *</label>
+                <input
+                  type="password"
+                  value={addUserForm.password}
+                  onChange={e => setAddUserForm({ ...addUserForm, password: e.target.value })}
+                  className={inputClass}
+                  placeholder="6 أحرف على الأقل"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 mb-1 block">اسم المستخدم للدخول (اختياري)</label>
+                <input
+                  type="text"
+                  value={addUserForm.loginUsername}
+                  onChange={e => setAddUserForm({ ...addUserForm, loginUsername: e.target.value })}
+                  className={inputClass}
+                  placeholder="اسم مختصر لتسجيل الدخول"
+                  dir="ltr"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-500 mb-2 block">الدور الوظيفي</label>
+              <div className="grid grid-cols-2 gap-2 max-w-xs">
+                <button
+                  type="button"
+                  onClick={() => setAddUserForm({ ...addUserForm, role: 'staff' })}
+                  className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                    addUserForm.role === 'staff' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <UserCheck size={16} /> موظف
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddUserForm({ ...addUserForm, role: 'admin' })}
+                  className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                    addUserForm.role === 'admin' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Crown size={16} /> مدير
+                </button>
+              </div>
+            </div>
+            {addUserForm.role === 'staff' && (
+              <div>
+                <label className="text-xs font-bold text-gray-500 mb-2 block">الصلاحيات</label>
+                <div className="max-h-48 overflow-y-auto bg-white rounded-xl p-3 border border-gray-200 space-y-2">
+                  {AVAILABLE_PERMISSIONS.map(perm => (
+                    <label key={perm.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={addUserForm.permissions.includes(perm.id)}
+                        onChange={() => handleToggleAddPermission(perm.id)}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-bold text-gray-700">{perm.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={handleAddUser}
+                disabled={addingUser}
+                className="flex items-center gap-2 bg-blue-600 text-white py-2.5 px-6 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                <Save size={16} />
+                {addingUser ? 'جاري الإضافة...' : 'إضافة المستخدم'}
+              </button>
+              <button
+                onClick={() => setShowAddUser(false)}
+                className="flex items-center gap-2 bg-gray-200 text-gray-700 py-2.5 px-6 rounded-xl text-sm font-bold hover:bg-gray-300 transition-colors"
+              >
+                <X size={16} /> إلغاء
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
