@@ -116,13 +116,18 @@ export type Database = {
       bookings: {
         Row: {
           address: string | null
+          age: number | null
+          booking_type: string | null
+          center: string | null
           contracting_company_id: number | null
           contracting_docs: Json | null
           created_at: string
           date: string
           doctor_id: string | null
           doctor_name: string
+          governorate: string | null
           id: string
+          notes: string | null
           patient_email: string | null
           patient_name: string
           payment_method: string | null
@@ -138,13 +143,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          age?: number | null
+          booking_type?: string | null
+          center?: string | null
           contracting_company_id?: number | null
           contracting_docs?: Json | null
           created_at?: string
           date: string
           doctor_id?: string | null
           doctor_name: string
+          governorate?: string | null
           id?: string
+          notes?: string | null
           patient_email?: string | null
           patient_name: string
           payment_method?: string | null
@@ -160,13 +170,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          age?: number | null
+          booking_type?: string | null
+          center?: string | null
           contracting_company_id?: number | null
           contracting_docs?: Json | null
           created_at?: string
           date?: string
           doctor_id?: string | null
           doctor_name?: string
+          governorate?: string | null
           id?: string
+          notes?: string | null
           patient_email?: string | null
           patient_name?: string
           payment_method?: string | null

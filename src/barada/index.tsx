@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from 'dompurify';
 import { useBaradaAuth, BaradaUser } from '@/hooks/useBaradaAuth';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
+import { runBookingTestMode } from './bookingTestMode';
 import { 
   Eye, Calendar, Phone, MapPin, Send, Sparkles, Menu, X, 
   Activity, Clock, UserPlus, Users, Settings, Trash2, 
@@ -92,6 +93,11 @@ interface Booking {
   phone2?: string;
   patientEmail?: string;
   address: string;
+  age?: number;
+  governorate?: string;
+  center?: string;
+  notes?: string;
+  bookingType?: 'cash' | 'contract';
   doctorId: number;
   doctorName: string;
   service: string;
@@ -106,6 +112,15 @@ interface Booking {
   paymentMethod?: 'cash' | 'instapay' | 'wallet';
   paymentStatus?: 'pending' | 'paid';
 }
+
+// Egypt Governorates list
+const EGYPT_GOVERNORATES = [
+  'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'البحر الأحمر', 'البحيرة',
+  'الفيوم', 'الغربية', 'الإسماعيلية', 'المنوفية', 'المنيا', 'القليوبية',
+  'الوادي الجديد', 'السويس', 'أسوان', 'أسيوط', 'بني سويف', 'بورسعيد',
+  'دمياط', 'الشرقية', 'جنوب سيناء', 'كفر الشيخ', 'مطروح', 'الأقصر',
+  'قنا', 'شمال سيناء', 'سوهاج'
+];
 
 interface Complaint {
   id: number;
@@ -563,6 +578,11 @@ const BookingModal = ({
     const [phone, setPhone] = useState('');
     const [phone2, setPhone2] = useState(''); 
     const [address, setAddress] = useState('');
+    const [age, setAge] = useState('');
+    const [governorate, setGovernorate] = useState('');
+    const [center, setCenter] = useState('');
+    const [bookingNotes, setBookingNotes] = useState('');
+    const [bookingType, setBookingType] = useState<'cash' | 'contract'>('cash');
     const [service, setService] = useState('');
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
@@ -688,6 +708,11 @@ const BookingModal = ({
             setPhone(initialData.phone);
             setPhone2(initialData.phone2 || '');
             setAddress(initialData.address || '');
+            setAge(initialData.age ? String(initialData.age) : '');
+            setGovernorate(initialData.governorate || '');
+            setCenter(initialData.center || '');
+            setBookingNotes(initialData.notes || '');
+            setBookingType(initialData.bookingType || 'cash');
             setService(initialData.service);
             setDate(initialData.date);
             setTime(initialData.time);
@@ -699,6 +724,11 @@ const BookingModal = ({
             setPhone('');
             setPhone2('');
             setAddress('');
+            setAge('');
+            setGovernorate('');
+            setCenter('');
+            setBookingNotes('');
+            setBookingType('cash');
             setService(services[0]?.title || '');
             // لا يتم تحديد طبيب افتراضي — يجب الاختيار يدوياً
             const initialDocId = doctor?.id || 0;
@@ -799,20 +829,26 @@ const BookingModal = ({
             return;
         }
 
-        // === التحقق من العنوان (المحافظة والمركز/المدينة) ===
-        const trimmedAddress = address.trim();
-        const addressParts = trimmedAddress.split(/[،,\-\/\s]+/).filter(part => part.length > 1);
-        
-        // Check address length limits (5-200 characters)
-        if (trimmedAddress.length < 5 || trimmedAddress.length > 200) {
-            alert('عذراً، يجب أن يكون العنوان بين 5 و 200 حرف.');
+        // === التحقق من السن ===
+        const ageNum = parseInt(age, 10);
+        if (!age || isNaN(ageNum) || ageNum < 1 || ageNum > 120) {
+            alert('عذراً، يجب إدخال السن (رقم بين 1 و 120).');
             return;
         }
-        
-        if (!trimmedAddress || addressParts.length < 2) {
-            alert('عذراً، يجب إدخال العنوان بشكل واضح يتضمن: اسم المحافظة واسم المركز/المدينة (مثال: القاهرة - مدينة نصر).');
+
+        // === التحقق من المحافظة والمركز ===
+        if (!governorate) {
+            alert('عذراً، يجب اختيار المحافظة.');
             return;
         }
+        if (!center.trim()) {
+            alert('عذراً، يجب إدخال المركز / المدينة.');
+            return;
+        }
+
+        // Compose address from governorate + center
+        const composedAddress = `${governorate} - ${center.trim()}`;
+
 
         if (!name || !phone || !date || !time) {
             alert('يرجى ملء جميع الحقول المطلوبة واختيار موعد متاح');
@@ -926,14 +962,19 @@ const BookingModal = ({
             return;
         }
 
-        // --- Logic Layer Separation: Cash vs Insurance ---
-        if (contractingId) {
+        // --- Logic Layer Separation: Cash vs Contract ---
+        if (bookingType === 'contract' && contractingId) {
             // Case: Insurance Patient
             onConfirm({
                 patientName: name,
                 phone,
                 phone2,
-                address: address,
+                address: composedAddress,
+                age: ageNum,
+                governorate,
+                center: center.trim(),
+                notes: bookingNotes.trim() || undefined,
+                bookingType: 'contract',
                 doctorId: selectedDoctorId,
                 doctorName: currentSelectedDoctor?.name || 'طبيب عام',
                 service,
@@ -941,9 +982,9 @@ const BookingModal = ({
                 time,
                 reminderSent: false,
                 contractingCompanyId: contractingId,
-                contractingDocs: {}, // Placeholder for future document upload
-                paymentMethod: undefined, // No immediate payment method
-                paymentStatus: 'pending' // Pending insurance verification
+                contractingDocs: {},
+                paymentMethod: undefined,
+                paymentStatus: 'pending'
             });
             onClose();
         } else {
@@ -955,12 +996,19 @@ const BookingModal = ({
     const handleFinalConfirm = (overridePaymentMethod?: 'cash' | 'instapay' | 'wallet') => {
         const method = overridePaymentMethod || selectedPaymentMethod;
         const status = method === 'cash' ? 'pending' : 'pending'; 
+        const composedAddr = `${governorate} - ${center.trim()}`;
+        const ageNum = parseInt(age, 10);
 
         onConfirm({
             patientName: name,
             phone,
             phone2,
-            address: address,
+            address: composedAddr,
+            age: isNaN(ageNum) ? undefined : ageNum,
+            governorate,
+            center: center.trim(),
+            notes: bookingNotes.trim() || undefined,
+            bookingType: 'cash',
             doctorId: selectedDoctorId,
             doctorName: currentSelectedDoctor?.name || 'طبيب عام',
             service,
@@ -993,16 +1041,49 @@ const BookingModal = ({
                     <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-left" placeholder="01xxxxxxxxx" dir="ltr" maxLength={11} />
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">رقم هاتف ثانٍ (اختياري)</label>
                     <input type="tel" value={phone2} onChange={e => setPhone2(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-left" placeholder="01xxxxxxxxx" dir="ltr" maxLength={11} />
                 </div>
                 <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">العنوان (اختياري)</label>
-                    <input type="text" value={address} onChange={e => setAddress(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="المدينة، الحي..." />
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">السن</label>
+                    <input type="number" value={age} onChange={e => setAge(e.target.value)} min={1} max={120} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="السن" />
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المحافظة</label>
+                    <select value={governorate} onChange={e => setGovernorate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                        <option value="" disabled>-- اختر المحافظة --</option>
+                        {EGYPT_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
                 </div>
             </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المركز / المدينة</label>
+                    <input type="text" value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="مثال: مدينة نصر" />
+                </div>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">نوع الكشف</label>
+                    <select value={bookingType} onChange={e => {
+                        const val = e.target.value as 'cash' | 'contract';
+                        setBookingType(val);
+                        if (val === 'cash') setContractingId(undefined);
+                    }} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                        <option value="cash">كشف نقدي</option>
+                        <option value="contract">كشف تعاقد</option>
+                    </select>
+                </div>
+            </div>
+            {bookingType === 'contract' && (
+                <div className="space-y-1.5">
+                    <ContractingSelector 
+                        companies={companies} 
+                        value={contractingId} 
+                        onChange={setContractingId} 
+                    />
+                </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">الطبيب</label>
@@ -1010,13 +1091,6 @@ const BookingModal = ({
                         <option value={0} disabled>-- اختر الطبيب --</option>
                         {realtimeDoctors.map(d => <option key={d.id} value={d.id}>د. {d.name} - {d.fee} ج.م</option>)}
                     </select>
-                </div>
-                <div className="space-y-1.5">
-                    <ContractingSelector 
-                        companies={companies} 
-                        value={contractingId} 
-                        onChange={setContractingId} 
-                    />
                 </div>
             </div>
 
@@ -1066,9 +1140,13 @@ const BookingModal = ({
                     </select>
                 </div>
             </div>
+            <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">ملاحظات (اختياري)</label>
+                <textarea value={bookingNotes} onChange={e => setBookingNotes(e.target.value)} rows={2} maxLength={500} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold resize-none" placeholder="أي ملاحظات إضافية..." />
+            </div>
             <button type="submit" className={`w-full ${initialData ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20'} text-white font-black py-5 rounded-2xl shadow-xl transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3 mt-4`}>
                 {initialData ? <Edit2 size={24} /> : <CheckCircle size={24} />}
-                {initialData ? 'تحديث البيانات' : (contractingId ? 'تأكيد حجز التعاقد' : 'متابعة لاختيار الدفع')}
+                {initialData ? 'تحديث البيانات' : (bookingType === 'contract' && contractingId ? 'تأكيد حجز التعاقد' : 'متابعة لاختيار الدفع')}
             </button>
         </form>
     );
@@ -3144,7 +3222,7 @@ const Footer = ({ settings, t, onNavigate }: { settings: AppSettings, t: any, on
                     <p className="text-gray-400 leading-relaxed font-bold mb-6">{settings.heroDescription}</p>
                     <div className="flex gap-4">
                         <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 hover:bg-blue-600 flex items-center justify-center transition-all hover:-translate-y-1"><Facebook size={20} /></a>
-                        <a href={`https://wa.me/${settings.whatsappNumber}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center transition-all hover:-translate-y-1"><MessageCircle size={20} /></a>
+                        <a href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center transition-all hover:-translate-y-1"><MessageCircle size={20} /></a>
                     </div>
                 </div>
                 <div>
@@ -3372,6 +3450,11 @@ const App = () => {
         phone2: b.phone2,
         patientEmail: b.patient_email,
         address: b.address || '',
+        age: b.age || undefined,
+        governorate: b.governorate || undefined,
+        center: b.center || undefined,
+        notes: b.notes || undefined,
+        bookingType: b.booking_type || 'cash',
         doctorId: parseInt(b.doctor_id?.slice(-8) || '0', 16) || 0,
         doctorName: b.doctor_name,
         service: b.service,
@@ -3389,6 +3472,13 @@ const App = () => {
       setBookings(mappedBookings);
     }
   }, [realtimeData.bookings]);
+
+  // Internal Booking Test Mode — runs once in dev, logs to console only
+  useEffect(() => {
+    if (import.meta.env.DEV && doctors.length > 0) {
+      runBookingTestMode(doctors, settings);
+    }
+  }, [doctors.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (realtimeData.operations.length > 0) {
@@ -3535,6 +3625,11 @@ const handleNavigate = (sectionId: string) => {
         phone2: data.phone2 || null,
         patient_email: data.patientEmail || null,
         address: data.address || null,
+        age: data.age || null,
+        governorate: data.governorate || null,
+        center: data.center || null,
+        notes: data.notes || null,
+        booking_type: data.bookingType || 'cash',
         doctor_id: doctorUuid,
         doctor_name: data.doctorName,
         service: data.service,
@@ -3558,7 +3653,7 @@ const handleNavigate = (sectionId: string) => {
         if (originalBooking) {
           const { error } = await supabase
             .from('bookings')
-            .update(bookingData)
+            .update(bookingData as any)
             .eq('id', originalBooking.id);
             
           if (error) throw error;
@@ -3571,7 +3666,7 @@ const handleNavigate = (sectionId: string) => {
       } else {
         const { error } = await supabase
           .from('bookings')
-          .insert([bookingData]);
+          .insert([bookingData] as any);
           
         if (error) throw error;
         addNotification('حجز جديد', `تم تسجيل حجز جديد للمريض ${data.patientName}`, 'success');
@@ -3715,11 +3810,12 @@ const handleNavigate = (sectionId: string) => {
   };
 
   const handleWhatsAppReminder = (item: any) => {
-      const phone = item.phone.startsWith('0') ? '+2' + item.phone : item.phone;
+      const cleanPhone = item.phone.replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone;
       const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody;
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       const text = encodeURIComponent(filledMessage);
-      window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+      window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
       handleSendReminder(item.id, item.itemType);
   };
 
