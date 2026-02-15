@@ -1891,7 +1891,9 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments'>('doctors');
+  const [activeTab, setActiveTab] = useState<'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('doctors');
+  const [contactLogs, setContactLogs] = useState<any[]>([]);
+  const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
   const [dateInput, setDateInput] = useState('');
   const [editingDoctorId, setEditingDoctorId] = useState<number | null>(null);
@@ -1949,6 +1951,15 @@ const AdminPanel = ({
   const [deletingHeroImageId, setDeletingHeroImageId] = useState<number | null>(null);
 
   const [doctorSearchTerm, setDoctorSearchTerm] = useState('');
+
+  const fetchContactLogs = async () => {
+    setContactLogsLoading(true);
+    try {
+      const { data, error } = await supabase.from('contact_logs').select('*').order('created_at', { ascending: false }).limit(200);
+      if (!error && data) setContactLogs(data);
+    } catch { /* silent */ }
+    setContactLogsLoading(false);
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const file = e.target.files?.[0];
@@ -2366,6 +2377,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                     {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('reports')} className={tabClass('reports')}><BarChart2 size={20} /> التقارير</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('analytics')} className={tabClass('analytics')}><PieChart size={20} /> تحليلات المرضى</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
+                    {currentUser.role === 'admin' && (<button onClick={() => { setActiveTab('contact-logs'); if (contactLogs.length === 0) fetchContactLogs(); }} className={tabClass('contact-logs')}><History size={20} /> سجل الاتصالات</button>)}
                     <div className="h-px bg-gray-50 mx-4 my-4"></div>
                     {currentUser.permissions.includes('manage_partners') && (<button onClick={() => setActiveTab('partners')} className={tabClass('partners')}><Building2 size={20} /> {t.partners}</button>)}
                     {currentUser.permissions.includes('manage_content') && (<button onClick={() => setActiveTab('services')} className={tabClass('services')}><LayoutTemplate size={20} /> {t.services}</button>)}
@@ -2441,7 +2453,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                                 <Banknote size={16}/>
                             </button>
                         )}
-                        <button onClick={() => onEditBooking(booking)} className="p-2 bg-blue-50 text-blue-600 rounded-lg" title="تعديل الحجز"><Edit2 size={16}/></button>{booking.status === 'confirmed' ? (<button onClick={() => onCancelBooking(booking.id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><X size={16}/></button>) : (<button onClick={() => onConfirmBooking(booking.id)} className="p-2 bg-green-50 text-green-600 rounded-lg"><CheckCircle size={16}/></button>)}<button onClick={() => setDeletingBookingId(booking.id)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="حذف الحجز نهائياً"><Trash2 size={16}/></button></div></td></tr>))}</tbody></table></div>
+                        <button onClick={() => onEditBooking(booking)} className="p-2 bg-blue-50 text-blue-600 rounded-lg" title="تعديل الحجز"><Edit2 size={16}/></button>{booking.status === 'confirmed' ? (<button onClick={() => onCancelBooking(booking.id)} className="p-2 bg-red-50 text-red-600 rounded-lg"><X size={16}/></button>) : (<button onClick={() => onConfirmBooking(booking.id)} className="p-2 bg-green-50 text-green-600 rounded-lg"><CheckCircle size={16}/></button>)}{currentUser.role === 'admin' && (<button onClick={() => setDeletingBookingId(booking.id)} className="p-2 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-600 hover:text-white transition-all" title="حذف الحجز نهائياً"><Trash2 size={16}/></button>)}</div></td></tr>))}</tbody></table></div>
                     </div>
                 )}
                 {activeTab === 'users' && (
@@ -2892,6 +2904,49 @@ const handlePrint = (title: string, contentHtml: string) => {
                      </div>
                   </div>
                 )}
+                {activeTab === 'contact-logs' && (
+                  <div className="space-y-8 animate-in fade-in duration-300">
+                     <div className={cardClass}>
+                        <div className="flex justify-between items-center mb-6">
+                           <h3 className="text-xl font-bold flex items-center gap-2"><History className="text-blue-600"/> سجل الاتصالات والتذكيرات</h3>
+                           <button onClick={fetchContactLogs} className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 hover:bg-blue-100"><RotateCcw size={16}/> تحديث</button>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-6 font-bold bg-blue-50 p-3 rounded-xl border border-blue-100">📋 يعرض هذا السجل جميع عمليات الاتصال والتذكير التي قام بها كل موظف مع المرضى.</p>
+                        {contactLogsLoading ? (
+                          <p className="text-center text-gray-400 py-10">جاري التحميل...</p>
+                        ) : contactLogs.length === 0 ? (
+                          <p className="text-center text-gray-400 py-10">لا توجد سجلات اتصال بعد</p>
+                        ) : (
+                          <div className="overflow-x-auto rounded-2xl border border-gray-100">
+                            <table className="w-full text-sm">
+                              <thead><tr className="bg-gray-50 text-gray-500 text-xs font-bold">
+                                <th className="p-4 text-right">الموظف</th>
+                                <th className="p-4 text-right">المريض</th>
+                                <th className="p-4 text-right">الهاتف</th>
+                                <th className="p-4 text-right">النوع</th>
+                                <th className="p-4 text-right">القسم</th>
+                                <th className="p-4 text-right">الطبيب</th>
+                                <th className="p-4 text-right">التاريخ</th>
+                              </tr></thead>
+                              <tbody>
+                                {contactLogs.map(log => (
+                                  <tr key={log.id} className="border-t border-gray-50 hover:bg-gray-50">
+                                    <td className="p-4 font-bold text-gray-900">{log.staff_name}</td>
+                                    <td className="p-4">{log.patient_name}</td>
+                                    <td className="p-4 text-xs text-gray-500 font-mono">{log.patient_phone}</td>
+                                    <td className="p-4"><span className={`px-2 py-1 rounded-full text-[10px] font-black ${log.contact_type === 'whatsapp' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>{log.contact_type === 'whatsapp' ? 'واتساب' : 'SMS'}</span></td>
+                                    <td className="p-4"><span className={`px-2 py-1 rounded-full text-[10px] font-black ${log.item_type === 'booking' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>{log.item_type === 'booking' ? 'حجز' : 'عملية'}</span></td>
+                                    <td className="p-4 text-xs">{log.doctor_name || '-'}</td>
+                                    <td className="p-4 text-xs text-gray-500">{new Date(log.created_at).toLocaleString('ar-EG')}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                     </div>
+                  </div>
+                )}
                 {activeTab === 'operations' && (
                   <div className="space-y-8 animate-in fade-in duration-300">
                      <div className={cardClass}>
@@ -2985,7 +3040,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                                        <td className="p-4 flex justify-center gap-2">
                                           <button onClick={() => handleStartEditOp(op)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Edit2 size={16}/></button>
                                           <button onClick={() => handleToggleOpStatus(op.id, op.status === 'confirmed' ? 'pending' : 'confirmed')} className={`p-2 rounded-lg ${op.status === 'confirmed' ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}>{op.status === 'confirmed' ? <RotateCcw size={16}/> : <CheckCircle size={16}/>}</button>
-                                          <button onClick={() => setDeletingOpIdModal(op.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16}/></button>
+                                          {currentUser.role === 'admin' && (<button onClick={() => setDeletingOpIdModal(op.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={16}/></button>)}
                                        </td>
                                     </tr>
                                  ))}
@@ -3802,11 +3857,28 @@ const handleNavigate = (sectionId: string) => {
         .replace(/\[الإجراء\]/g, item.service || '');
   };
 
+  const logContact = async (contactType: string, item: any, messagePreview: string) => {
+    try {
+      await supabase.from('contact_logs').insert({
+        staff_user_id: baradaUser?.id || '',
+        staff_name: baradaUser?.name || currentUser?.name || 'غير معروف',
+        patient_name: item.patientName || '',
+        patient_phone: item.phone || '',
+        contact_type: contactType,
+        item_type: item.itemType || 'booking',
+        item_id: String(item.id || ''),
+        doctor_name: item.doctorName || '',
+        message_preview: messagePreview.slice(0, 200),
+      });
+    } catch { /* silent */ }
+  };
+
   const handleSmsReminder = (item: any) => {
       const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.smsBody : settings.reminderSettings.opSmsBody;
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       alert(`تم إرسال SMS تذكير للمريض: ${item.patientName}\nنص الرسالة:\n${filledMessage}`);
       handleSendReminder(item.id, item.itemType);
+      logContact('sms', item, filledMessage);
   };
 
   const handleWhatsAppReminder = (item: any) => {
@@ -3817,6 +3889,7 @@ const handleNavigate = (sectionId: string) => {
       const text = encodeURIComponent(filledMessage);
       window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
       handleSendReminder(item.id, item.itemType);
+      logContact('whatsapp', item, filledMessage);
   };
 
   const handleConfirmPayment = async (id: number) => {
