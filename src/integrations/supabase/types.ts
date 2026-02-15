@@ -235,6 +235,48 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_logs: {
+        Row: {
+          contact_type: string
+          created_at: string
+          doctor_name: string | null
+          id: string
+          item_id: string | null
+          item_type: string
+          message_preview: string | null
+          patient_name: string
+          patient_phone: string
+          staff_name: string
+          staff_user_id: string
+        }
+        Insert: {
+          contact_type: string
+          created_at?: string
+          doctor_name?: string | null
+          id?: string
+          item_id?: string | null
+          item_type: string
+          message_preview?: string | null
+          patient_name: string
+          patient_phone: string
+          staff_name: string
+          staff_user_id: string
+        }
+        Update: {
+          contact_type?: string
+          created_at?: string
+          doctor_name?: string | null
+          id?: string
+          item_id?: string | null
+          item_type?: string
+          message_preview?: string | null
+          patient_name?: string
+          patient_phone?: string
+          staff_name?: string
+          staff_user_id?: string
+        }
+        Relationships: []
+      }
       contracting_companies: {
         Row: {
           created_at: string
