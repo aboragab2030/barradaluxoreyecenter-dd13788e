@@ -31,6 +31,7 @@ import {
 import { ContractingSelector, ContractingManager, ContractingCompany, ContractingManagement } from './contracting';
 import { PaymentsTab } from './PaymentsTab';
 import { StaffManagement } from './StaffManagement';
+import OverviewDashboard from './OverviewDashboard';
 
 // Constants for input validation
 const MAX_AI_MESSAGE_LENGTH = 500;
@@ -1891,7 +1892,7 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('doctors');
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('overview');
   const [contactLogs, setContactLogs] = useState<any[]>([]);
   const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
@@ -2370,6 +2371,7 @@ const handlePrint = (title: string, contentHtml: string) => {
             <aside className="lg:w-72 shrink-0">
                 <div className="sticky top-24 bg-white rounded-[2rem] border border-gray-100 shadow-xl shadow-gray-100/50 p-6 space-y-1.5 overflow-hidden">
                     <div className="flex items-center gap-3 px-4 py-6 mb-4 border-b border-gray-50"><div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-200"><LayoutDashboard size={24} /></div><div><h2 className="text-xl font-black text-gray-900 leading-none">{t.controlPanel}</h2><p className="text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-widest">Barada EMS</p></div></div>
+                    <button onClick={() => setActiveTab('overview')} className={tabClass('overview')}><Eye size={20} /> نظرة عامة</button>
                     <button onClick={() => setActiveTab('doctors')} className={tabClass('doctors')}><Users size={20} /> {t.doctors}</button>
                     <button onClick={() => setActiveTab('bookings')} className={tabClass('bookings')}><CalendarDays size={20} /> {t.myBookings}</button>
                     {currentUser.permissions.includes('manage_operations') && (<button onClick={() => setActiveTab('operations')} className={tabClass('operations')}><Scissors size={20} /> سجل العمليات</button>)}
@@ -2390,6 +2392,16 @@ const handlePrint = (title: string, contentHtml: string) => {
                 </div>
             </aside>
             <main className="flex-1 min-w-0">
+                {activeTab === 'overview' && (
+                  <OverviewDashboard
+                    bookings={allBookings}
+                    operations={operations}
+                    doctors={doctors}
+                    settings={settings}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                  />
+                )}
                 {activeTab === 'doctors' && (
                     <div className="space-y-8 animate-in fade-in duration-300">
                         <div className={`${cardClass} ${editingDoctorId ? 'ring-2 ring-blue-500 shadow-blue-100' : ''}`}>
