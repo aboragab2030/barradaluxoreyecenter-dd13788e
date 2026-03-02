@@ -32,6 +32,8 @@ import { ContractingSelector, ContractingManager, ContractingCompany, Contractin
 import { PaymentsTab } from './PaymentsTab';
 import { StaffManagement } from './StaffManagement';
 import OverviewDashboard from './OverviewDashboard';
+import ContractingStats from './ContractingStats';
+import { EGYPT_GOVERNORATES_CENTERS, EGYPT_GOVERNORATES_LIST } from './egyptData';
 
 // Constants for input validation
 const MAX_AI_MESSAGE_LENGTH = 500;
@@ -115,13 +117,7 @@ interface Booking {
 }
 
 // Egypt Governorates list
-const EGYPT_GOVERNORATES = [
-  'القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'البحر الأحمر', 'البحيرة',
-  'الفيوم', 'الغربية', 'الإسماعيلية', 'المنوفية', 'المنيا', 'القليوبية',
-  'الوادي الجديد', 'السويس', 'أسوان', 'أسيوط', 'بني سويف', 'بورسعيد',
-  'دمياط', 'الشرقية', 'جنوب سيناء', 'كفر الشيخ', 'مطروح', 'الأقصر',
-  'قنا', 'شمال سيناء', 'سوهاج'
-];
+const EGYPT_GOVERNORATES = EGYPT_GOVERNORATES_LIST;
 
 interface Complaint {
   id: number;
@@ -1053,7 +1049,7 @@ const BookingModal = ({
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المحافظة</label>
-                    <select value={governorate} onChange={e => setGovernorate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                    <select value={governorate} onChange={e => { setGovernorate(e.target.value); setCenter(''); }} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
                         <option value="" disabled>-- اختر المحافظة --</option>
                         {EGYPT_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
@@ -1062,7 +1058,14 @@ const BookingModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المركز / المدينة</label>
-                    <input type="text" value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="مثال: مدينة نصر" />
+                    {governorate && EGYPT_GOVERNORATES_CENTERS[governorate] ? (
+                        <select value={center} onChange={e => setCenter(e.target.value)} disabled={!governorate} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                            <option value="" disabled>-- اختر المركز --</option>
+                            {EGYPT_GOVERNORATES_CENTERS[governorate].map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    ) : (
+                        <input type="text" value={center} onChange={e => setCenter(e.target.value)} disabled={!governorate} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed" placeholder={governorate ? 'مثال: مدينة نصر' : 'اختر المحافظة أولاً'} />
+                    )}
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">نوع الكشف</label>
@@ -1892,7 +1895,7 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs' | 'contracting-stats'>('overview');
   const [contactLogs, setContactLogs] = useState<any[]>([]);
   const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
@@ -2378,6 +2381,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                     {currentUser.permissions.includes('manage_reminders') && (<button onClick={() => setActiveTab('reminders')} className={tabClass('reminders')}><Smartphone size={20} /> التذكيرات</button>)}
                     {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('reports')} className={tabClass('reports')}><BarChart2 size={20} /> التقارير</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('analytics')} className={tabClass('analytics')}><PieChart size={20} /> تحليلات المرضى</button>)}
+                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('contracting-stats')} className={tabClass('contracting-stats')}><Building2 size={20} /> إحصائيات التعاقدات</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => { setActiveTab('contact-logs'); if (contactLogs.length === 0) fetchContactLogs(); }} className={tabClass('contact-logs')}><History size={20} /> سجل الاتصالات</button>)}
                     <div className="h-px bg-gray-50 mx-4 my-4"></div>
@@ -3112,6 +3116,15 @@ const handlePrint = (title: string, contentHtml: string) => {
                      cardClass={cardClass} 
                      inputClass={inputClass} 
                      onPrint={handlePrint}
+                   />
+                )}
+                {activeTab === 'contracting-stats' && (
+                   <ContractingStats
+                     bookings={allBookings}
+                     operations={operations}
+                     companies={contractingList}
+                     cardClass={cardClass}
+                     settingsAppName={settings.appName}
                    />
                 )}
             </main>
@@ -3894,12 +3907,17 @@ const handleNavigate = (sectionId: string) => {
   };
 
   const handleWhatsAppReminder = (item: any) => {
-      const cleanPhone = item.phone.replace(/[^0-9]/g, '');
-      const waPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone;
+      const cleanPhone = (item.phone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : (cleanPhone.startsWith('2') ? cleanPhone : '2' + cleanPhone);
       const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody;
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       const text = encodeURIComponent(filledMessage);
-      window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
+      const waUrl = `https://wa.me/${waPhone}?text=${text}`;
+      const newWindow = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        // Popup blocked - show fallback link
+        const fallback = prompt('تم حظر النافذة المنبثقة. انسخ الرابط التالي وافتحه يدوياً:', waUrl);
+      }
       handleSendReminder(item.id, item.itemType);
       logContact('whatsapp', item, filledMessage);
   };
