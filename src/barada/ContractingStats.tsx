@@ -370,7 +370,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
           </style>
         </head>
         <body>
-          <div class="header"><h1>${sanitizedAppName}</h1><h2>إحصائيات التعاقدات والعنوان والسن</h2></div>
+          <div class="header"><h1>${sanitizedAppName}</h1><h2>إحصائيات المرضى</h2></div>
           ${DOMPurify.sanitize(content, { ALLOWED_TAGS: ['div', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'h3', 'h2'] })}
           <div class="footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')} | ${sanitizedAppName}</div>
           <script>window.onload = function() { window.print(); window.close(); };</script>
