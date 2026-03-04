@@ -731,8 +731,8 @@ const BookingModal = ({
             const initialDocId = doctor?.id || 0;
             setSelectedDoctorId(initialDocId);
             const initialDoc = doctor ? realtimeDoctors.find(d => d.id === initialDocId) : null;
-            const firstValidDate = initialDoc?.availableDates.find(d => d !== todayStr) || tomorrowStr;
-            setDate(firstValidDate);
+            const validDates = initialDoc?.availableDates.filter(d => d > todayStr).sort() || [];
+            setDate(validDates[0] || tomorrowStr);
             setTime('');
             setContractingId(undefined);
         }
