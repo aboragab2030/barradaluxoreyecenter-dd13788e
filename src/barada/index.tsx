@@ -435,7 +435,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 400,
     rating: 4.9,
     topSpecialties: ['الفيمتو ليزك', 'المياه البيضاء', 'أمراض القرنية'],
-    availableDates: [new Date().toISOString().split('T')[0]],
+    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
     patientsPerHour: 4,
     experience: 15,
     education: 'دكتوراه طب وجراحة العيون - جامعة القاهرة',
