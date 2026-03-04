@@ -738,6 +738,18 @@ const BookingModal = ({
         }
     }, [isOpen, initialData, doctor, services, realtimeDoctors]);
 
+    // عند تغيير الطبيب، تحديث التاريخ لأول يوم متاح مستقبلي
+    useEffect(() => {
+        if (!isOpen || !currentSelectedDoctor) return;
+        const validDates = currentSelectedDoctor.availableDates.filter(d => d > todayStr).sort();
+        if (validDates.length > 0 && !validDates.includes(date)) {
+            setDate(validDates[0]);
+        } else if (validDates.length === 0) {
+            setDate(tomorrowStr);
+        }
+        setTime('');
+    }, [selectedDoctorId]);
+
     if (!isOpen) return null;
 
     // دالة للتحقق من إمكانية حجز المتابعة
