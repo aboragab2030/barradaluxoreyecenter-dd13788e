@@ -328,7 +328,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
     const sanitizedAppName = DOMPurify.sanitize(settingsAppName);
 
     const content = `
-      <h3>إحصائيات التعاقدات</h3>
+      <h3>إحصائيات المرضى</h3>
       <table>
         <tr><td>كشوفات تعاقد</td><td>${contractingStats.contractBookings}</td></tr>
         <tr><td>كشوفات نقدي</td><td>${contractingStats.cashBookings}</td></tr>
@@ -355,7 +355,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
     printWindow.document.write(`
       <html lang="ar" dir="rtl">
         <head>
-          <title>إحصائيات التعاقدات - ${sanitizedAppName}</title>
+          <title>إحصائيات المرضى - ${sanitizedAppName}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
             @page { margin: 10mm; size: A4; }
@@ -370,7 +370,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
           </style>
         </head>
         <body>
-          <div class="header"><h1>${sanitizedAppName}</h1><h2>إحصائيات التعاقدات والعنوان والسن</h2></div>
+          <div class="header"><h1>${sanitizedAppName}</h1><h2>إحصائيات المرضى</h2></div>
           ${DOMPurify.sanitize(content, { ALLOWED_TAGS: ['div', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'h3', 'h2'] })}
           <div class="footer">تاريخ الطباعة: ${new Date().toLocaleString('ar-EG')} | ${sanitizedAppName}</div>
           <script>window.onload = function() { window.print(); window.close(); };</script>
@@ -392,7 +392,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-            <Building2 size={28} className="text-blue-600" /> إحصائيات التعاقدات والعنوان والسن
+            <Building2 size={28} className="text-blue-600" /> إحصائيات المرضى
           </h2>
           <p className="text-xs text-gray-400 font-bold mt-1">بيانات حقيقية مباشرة من قاعدة البيانات</p>
         </div>
