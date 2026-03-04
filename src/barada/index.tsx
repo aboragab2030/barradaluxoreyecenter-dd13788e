@@ -644,7 +644,7 @@ const BookingModal = ({
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d !== todayStr) || [];
+    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d > todayStr).sort() || [];
 
     // Get service price based on selection
     const selectedService = services.find(s => s.title === service);
