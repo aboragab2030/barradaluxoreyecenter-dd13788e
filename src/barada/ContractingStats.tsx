@@ -328,7 +328,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
     const sanitizedAppName = DOMPurify.sanitize(settingsAppName);
 
     const content = `
-      <h3>إحصائيات التعاقدات</h3>
+      <h3>إحصائيات المرضى</h3>
       <table>
         <tr><td>كشوفات تعاقد</td><td>${contractingStats.contractBookings}</td></tr>
         <tr><td>كشوفات نقدي</td><td>${contractingStats.cashBookings}</td></tr>
