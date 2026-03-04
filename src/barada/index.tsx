@@ -644,7 +644,7 @@ const BookingModal = ({
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d !== todayStr) || [];
+    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d > todayStr).sort() || [];
 
     // Get service price based on selection
     const selectedService = services.find(s => s.title === service);
@@ -731,12 +731,24 @@ const BookingModal = ({
             const initialDocId = doctor?.id || 0;
             setSelectedDoctorId(initialDocId);
             const initialDoc = doctor ? realtimeDoctors.find(d => d.id === initialDocId) : null;
-            const firstValidDate = initialDoc?.availableDates.find(d => d !== todayStr) || tomorrowStr;
-            setDate(firstValidDate);
+            const validDates = initialDoc?.availableDates.filter(d => d > todayStr).sort() || [];
+            setDate(validDates[0] || tomorrowStr);
             setTime('');
             setContractingId(undefined);
         }
     }, [isOpen, initialData, doctor, services, realtimeDoctors]);
+
+    // عند تغيير الطبيب، تحديث التاريخ لأول يوم متاح مستقبلي
+    useEffect(() => {
+        if (!isOpen || !currentSelectedDoctor) return;
+        const validDates = currentSelectedDoctor.availableDates.filter(d => d > todayStr).sort();
+        if (validDates.length > 0 && !validDates.includes(date)) {
+            setDate(validDates[0]);
+        } else if (validDates.length === 0) {
+            setDate(tomorrowStr);
+        }
+        setTime('');
+    }, [selectedDoctorId]);
 
     if (!isOpen) return null;
 
