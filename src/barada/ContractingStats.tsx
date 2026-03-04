@@ -355,7 +355,7 @@ const ContractingStats: React.FC<ContractingStatsProps> = ({
     printWindow.document.write(`
       <html lang="ar" dir="rtl">
         <head>
-          <title>إحصائيات التعاقدات - ${sanitizedAppName}</title>
+          <title>إحصائيات المرضى - ${sanitizedAppName}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
             @page { margin: 10mm; size: A4; }
