@@ -469,7 +469,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 500,
     rating: 4.7,
     topSpecialties: ['جراحة الشبكية', 'انفصال الشبكية', 'النزيف الزجاجي'],
-    availableDates: [new Date().toISOString().split('T')[0]],
+    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
     patientsPerHour: 2,
     experience: 20,
     education: 'زمالة كلية الجراحين الملكية - بريطانيا',
