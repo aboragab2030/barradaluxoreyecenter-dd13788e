@@ -452,7 +452,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 300,
     rating: 4.8,
     topSpecialties: ['علاج الحول', 'فحص المواليد', 'القنوات الدمعية'],
-    availableDates: [new Date().toISOString().split('T')[0]],
+    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
     patientsPerHour: 3,
     experience: 10,
     education: 'ماجستير عيون الأطفال - جامعة عين شمس',
