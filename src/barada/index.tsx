@@ -6,6 +6,9 @@ import DOMPurify from 'dompurify';
 import { useBaradaAuth, BaradaUser } from '@/hooks/useBaradaAuth';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { runBookingTestMode } from './bookingTestMode';
+import { EGYPT_CENTERS } from './egyptData';
+import PatientStats from './PatientStats';
+import ManagementIntelligence from './ManagementIntelligence';
 import { 
   Eye, Calendar, Phone, MapPin, Send, Sparkles, Menu, X, 
   Activity, Clock, UserPlus, Users, Settings, Trash2, 
@@ -1053,7 +1056,7 @@ const BookingModal = ({
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المحافظة</label>
-                    <select value={governorate} onChange={e => setGovernorate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                    <select value={governorate} onChange={e => { setGovernorate(e.target.value); setCenter(''); }} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
                         <option value="" disabled>-- اختر المحافظة --</option>
                         {EGYPT_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
@@ -1062,7 +1065,14 @@ const BookingModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المركز / المدينة</label>
-                    <input type="text" value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="مثال: مدينة نصر" />
+                    {governorate && EGYPT_CENTERS[governorate] ? (
+                        <select value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                            <option value="" disabled>-- اختر المركز --</option>
+                            {EGYPT_CENTERS[governorate].map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    ) : (
+                        <input type="text" value={center} onChange={e => setCenter(e.target.value)} disabled={!governorate} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold disabled:opacity-50" placeholder={governorate ? 'أدخل المركز' : 'اختر المحافظة أولاً'} />
+                    )}
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">نوع الكشف</label>
@@ -1892,7 +1902,7 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'patient-stats' | 'intelligence' | 'payments' | 'contact-logs'>('overview');
   const [contactLogs, setContactLogs] = useState<any[]>([]);
   const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
@@ -2376,8 +2386,8 @@ const handlePrint = (title: string, contentHtml: string) => {
                     <button onClick={() => setActiveTab('bookings')} className={tabClass('bookings')}><CalendarDays size={20} /> {t.myBookings}</button>
                     {currentUser.permissions.includes('manage_operations') && (<button onClick={() => setActiveTab('operations')} className={tabClass('operations')}><Scissors size={20} /> سجل العمليات</button>)}
                     {currentUser.permissions.includes('manage_reminders') && (<button onClick={() => setActiveTab('reminders')} className={tabClass('reminders')}><Smartphone size={20} /> التذكيرات</button>)}
-                    {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('reports')} className={tabClass('reports')}><BarChart2 size={20} /> التقارير</button>)}
-                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('analytics')} className={tabClass('analytics')}><PieChart size={20} /> تحليلات المرضى</button>)}
+                    {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('patient-stats')} className={tabClass('patient-stats')}><PieChart size={20} /> إحصائيات المرضى</button>)}
+                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('intelligence')} className={tabClass('intelligence')}><Brain size={20} /> الذكاء الإداري</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => { setActiveTab('contact-logs'); if (contactLogs.length === 0) fetchContactLogs(); }} className={tabClass('contact-logs')}><History size={20} /> سجل الاتصالات</button>)}
                     <div className="h-px bg-gray-50 mx-4 my-4"></div>
@@ -2475,43 +2485,14 @@ const handlePrint = (title: string, contentHtml: string) => {
                   </div>
                 )}
                 {activeTab === 'reports' && (
-                  <div className="space-y-8 animate-in fade-in duration-300">
-                    <div className={cardClass}>
-                      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-bold">التقارير والإحصائيات</h3><button onClick={() => handlePrint('تقرير الأداء العام', document.getElementById('report-content')?.innerHTML || '')} className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2"><Printer size={16}/> طباعة التقرير</button></div>
-                      <div className="flex gap-4 mb-8 flex-wrap">
-                        <input type="date" value={reportStart} onChange={e => setReportStart(e.target.value)} className={inputClass + " w-auto"} />
-                        <span className="self-center font-bold text-gray-400">إلى</span>
-                        <input type="date" value={reportEnd} onChange={e => setReportEnd(e.target.value)} className={inputClass + " w-auto"} />
-                        <div className="flex bg-gray-100 p-1 rounded-xl">
-                           <button onClick={() => setReportSortBy('total')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'total' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>الإجمالي</button>
-                           <button onClick={() => setReportSortBy('bookings')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'bookings' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>الكشوفات</button>
-                           <button onClick={() => setReportSortBy('operations')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'operations' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>العمليات</button>
-                        </div>
-                      </div>
-                      <div id="report-content" className="space-y-4">
-                        {doctorStats.map((doc, idx) => (
-                          <div key={doc.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                             <div className="font-black text-gray-400 w-6 text-center">{idx + 1}</div>
-                             <img src={doc.image} className="w-12 h-12 rounded-full object-cover" />
-                             <div className="flex-1">
-                               <h4 className="font-bold text-gray-900">{doc.name}</h4>
-                               <div className="flex gap-4 text-xs mt-1">
-                                 <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">كشف: {doc.bookingsCount}</span>
-                                 <span className="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">عملية: {doc.operationsCount}</span>
-                                </div>
-                             </div>
-                             <div className="text-right">
-                               <p className="text-xs text-gray-400 font-bold mb-1">الإجمالي</p>
-                               <p className="text-xl font-black text-gray-800">{doc.total}</p>
-                             </div>
-                             <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                               <div className="h-full bg-blue-500" style={{ width: `${(doc.total / maxStatValue) * 100}%` }}></div>
-                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <PatientStats
+                    bookings={allBookings}
+                    operations={operations}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
                 )}
                 {activeTab === 'hero-images' && (
                     <div className="space-y-8 animate-in fade-in duration-300">
@@ -3062,50 +3043,26 @@ const handlePrint = (title: string, contentHtml: string) => {
                      </div>
                   </div>
                 )}
-                {activeTab === 'analytics' && (
-                   <div className="space-y-8 animate-in fade-in duration-300">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-6 text-white shadow-lg shadow-blue-200">
-                            <div className="flex items-center gap-3 mb-4 opacity-80"><Users size={24}/><span className="text-sm font-bold">إجمالي المرضى (الفترة المحددة)</span></div>
-                            <h3 className="text-4xl font-black">{analyticsData.totalPatients}</h3>
-                         </div>
-                         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4 text-emerald-600"><Banknote size={24}/><span className="text-sm font-bold text-gray-500">متوسط إنفاق المريض</span></div>
-                            <h3 className="text-4xl font-black text-gray-900">{Math.round(analyticsData.avgCostPerPatient)} <span className="text-sm text-gray-400">ج.م</span></h3>
-                         </div>
-                         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4 text-purple-600"><TrendingUp size={24}/><span className="text-sm font-bold text-gray-500">إجمالي الإيرادات</span></div>
-                            <h3 className="text-4xl font-black text-gray-900">{analyticsData.totalRevenue.toLocaleString()} <span className="text-sm text-gray-400">ج.م</span></h3>
-                         </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                         <div className={cardClass}>
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Star size={20} className="text-amber-500"/> أكثر المرضى تردداً</h3>
-                            <div className="space-y-4">
-                               {analyticsData.mostFrequent.map((p, i) => (
-                                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">{i+1}</div>
-                                        <div><h4 className="font-bold text-sm text-gray-900">{p.name}</h4><p className="text-[10px] text-gray-500">{p.phone}</p></div>
-                                     </div>
-                                     <div className="text-right"><p className="text-xs font-bold text-blue-600">{p.count} زيارات</p><p className="text-[10px] text-gray-400">{p.totalCost} ج.م</p></div>
-                                  </div>
-                               ))}
-                            </div>
-                         </div>
-                         <div className={cardClass}>
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Activity className="text-red-500"/> الخدمات الأكثر طلباً</h3>
-                            <div className="space-y-4">
-                               {analyticsData.popularServices.map((s, i) => (
-                                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                     <h4 className="font-bold text-sm text-gray-900">{s.title}</h4>
-                                     <span className="bg-white border border-gray-200 px-3 py-1 rounded-lg text-xs font-bold text-gray-600">{s.count} مرة</span>
-                                  </div>
-                               ))}
-                            </div>
-                         </div>
-                      </div>
-                   </div>
+                {activeTab === 'patient-stats' && (
+                  <PatientStats
+                    bookings={allBookings}
+                    operations={operations}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
+                )}
+                {activeTab === 'intelligence' && (
+                  <ManagementIntelligence
+                    bookings={allBookings}
+                    operations={operations}
+                    doctors={doctors}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
                 )}
                 {activeTab === 'payments' && (
                    <PaymentsTab 
@@ -3894,12 +3851,20 @@ const handleNavigate = (sectionId: string) => {
   };
 
   const handleWhatsAppReminder = (item: any) => {
-      const cleanPhone = item.phone.replace(/[^0-9]/g, '');
-      const waPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone;
+      let cleanPhone = (item.phone || '').replace(/[\s\-\+\(\)]/g, '');
+      cleanPhone = cleanPhone.replace(/[^0-9]/g, '');
+      if (cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
+      else if (!cleanPhone.startsWith('2') && cleanPhone.length === 10) cleanPhone = '20' + cleanPhone;
       const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody;
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       const text = encodeURIComponent(filledMessage);
-      window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
+      const waUrl = `https://wa.me/${cleanPhone}?text=${text}`;
+      const newWin = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!newWin) {
+        // Popup blocked — show direct link
+        const fallback = confirm(`تعذر فتح واتساب تلقائياً.\nهل تريد نسخ الرابط؟`);
+        if (fallback) { navigator.clipboard.writeText(waUrl).then(() => alert('تم نسخ الرابط. الصقه في المتصفح.')).catch(() => { prompt('انسخ الرابط:', waUrl); }); }
+      }
       handleSendReminder(item.id, item.itemType);
       logContact('whatsapp', item, filledMessage);
   };
