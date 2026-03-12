@@ -6,6 +6,9 @@ import DOMPurify from 'dompurify';
 import { useBaradaAuth, BaradaUser } from '@/hooks/useBaradaAuth';
 import { useRealtimeSync } from '@/hooks/useRealtimeSync';
 import { runBookingTestMode } from './bookingTestMode';
+import { EGYPT_CENTERS } from './egyptData';
+import PatientStats from './PatientStats';
+import ManagementIntelligence from './ManagementIntelligence';
 import { 
   Eye, Calendar, Phone, MapPin, Send, Sparkles, Menu, X, 
   Activity, Clock, UserPlus, Users, Settings, Trash2, 
