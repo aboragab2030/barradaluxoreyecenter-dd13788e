@@ -3043,50 +3043,26 @@ const handlePrint = (title: string, contentHtml: string) => {
                      </div>
                   </div>
                 )}
-                {activeTab === 'analytics' && (
-                   <div className="space-y-8 animate-in fade-in duration-300">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                         <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-6 text-white shadow-lg shadow-blue-200">
-                            <div className="flex items-center gap-3 mb-4 opacity-80"><Users size={24}/><span className="text-sm font-bold">إجمالي المرضى (الفترة المحددة)</span></div>
-                            <h3 className="text-4xl font-black">{analyticsData.totalPatients}</h3>
-                         </div>
-                         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4 text-emerald-600"><Banknote size={24}/><span className="text-sm font-bold text-gray-500">متوسط إنفاق المريض</span></div>
-                            <h3 className="text-4xl font-black text-gray-900">{Math.round(analyticsData.avgCostPerPatient)} <span className="text-sm text-gray-400">ج.م</span></h3>
-                         </div>
-                         <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
-                            <div className="flex items-center gap-3 mb-4 text-purple-600"><TrendingUp size={24}/><span className="text-sm font-bold text-gray-500">إجمالي الإيرادات</span></div>
-                            <h3 className="text-4xl font-black text-gray-900">{analyticsData.totalRevenue.toLocaleString()} <span className="text-sm text-gray-400">ج.م</span></h3>
-                         </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                         <div className={cardClass}>
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Star size={20} className="text-amber-500"/> أكثر المرضى تردداً</h3>
-                            <div className="space-y-4">
-                               {analyticsData.mostFrequent.map((p, i) => (
-                                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">{i+1}</div>
-                                        <div><h4 className="font-bold text-sm text-gray-900">{p.name}</h4><p className="text-[10px] text-gray-500">{p.phone}</p></div>
-                                     </div>
-                                     <div className="text-right"><p className="text-xs font-bold text-blue-600">{p.count} زيارات</p><p className="text-[10px] text-gray-400">{p.totalCost} ج.م</p></div>
-                                  </div>
-                               ))}
-                            </div>
-                         </div>
-                         <div className={cardClass}>
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2"><Activity className="text-red-500"/> الخدمات الأكثر طلباً</h3>
-                            <div className="space-y-4">
-                               {analyticsData.popularServices.map((s, i) => (
-                                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                                     <h4 className="font-bold text-sm text-gray-900">{s.title}</h4>
-                                     <span className="bg-white border border-gray-200 px-3 py-1 rounded-lg text-xs font-bold text-gray-600">{s.count} مرة</span>
-                                  </div>
-                               ))}
-                            </div>
-                         </div>
-                      </div>
-                   </div>
+                {activeTab === 'patient-stats' && (
+                  <PatientStats
+                    bookings={allBookings}
+                    operations={operations}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
+                )}
+                {activeTab === 'intelligence' && (
+                  <ManagementIntelligence
+                    bookings={allBookings}
+                    operations={operations}
+                    doctors={doctors}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
                 )}
                 {activeTab === 'payments' && (
                    <PaymentsTab 
