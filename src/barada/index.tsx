@@ -2386,8 +2386,8 @@ const handlePrint = (title: string, contentHtml: string) => {
                     <button onClick={() => setActiveTab('bookings')} className={tabClass('bookings')}><CalendarDays size={20} /> {t.myBookings}</button>
                     {currentUser.permissions.includes('manage_operations') && (<button onClick={() => setActiveTab('operations')} className={tabClass('operations')}><Scissors size={20} /> سجل العمليات</button>)}
                     {currentUser.permissions.includes('manage_reminders') && (<button onClick={() => setActiveTab('reminders')} className={tabClass('reminders')}><Smartphone size={20} /> التذكيرات</button>)}
-                    {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('reports')} className={tabClass('reports')}><BarChart2 size={20} /> التقارير</button>)}
-                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('analytics')} className={tabClass('analytics')}><PieChart size={20} /> تحليلات المرضى</button>)}
+                    {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('patient-stats')} className={tabClass('patient-stats')}><PieChart size={20} /> إحصائيات المرضى</button>)}
+                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('intelligence')} className={tabClass('intelligence')}><Brain size={20} /> الذكاء الإداري</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => { setActiveTab('contact-logs'); if (contactLogs.length === 0) fetchContactLogs(); }} className={tabClass('contact-logs')}><History size={20} /> سجل الاتصالات</button>)}
                     <div className="h-px bg-gray-50 mx-4 my-4"></div>
