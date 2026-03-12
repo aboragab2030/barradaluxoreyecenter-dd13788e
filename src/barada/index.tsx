@@ -2485,43 +2485,14 @@ const handlePrint = (title: string, contentHtml: string) => {
                   </div>
                 )}
                 {activeTab === 'reports' && (
-                  <div className="space-y-8 animate-in fade-in duration-300">
-                    <div className={cardClass}>
-                      <div className="flex justify-between items-center mb-6"><h3 className="text-xl font-bold">التقارير والإحصائيات</h3><button onClick={() => handlePrint('تقرير الأداء العام', document.getElementById('report-content')?.innerHTML || '')} className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2"><Printer size={16}/> طباعة التقرير</button></div>
-                      <div className="flex gap-4 mb-8 flex-wrap">
-                        <input type="date" value={reportStart} onChange={e => setReportStart(e.target.value)} className={inputClass + " w-auto"} />
-                        <span className="self-center font-bold text-gray-400">إلى</span>
-                        <input type="date" value={reportEnd} onChange={e => setReportEnd(e.target.value)} className={inputClass + " w-auto"} />
-                        <div className="flex bg-gray-100 p-1 rounded-xl">
-                           <button onClick={() => setReportSortBy('total')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'total' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>الإجمالي</button>
-                           <button onClick={() => setReportSortBy('bookings')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'bookings' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>الكشوفات</button>
-                           <button onClick={() => setReportSortBy('operations')} className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${reportSortBy === 'operations' ? 'bg-white shadow text-blue-600' : 'text-gray-500'}`}>العمليات</button>
-                        </div>
-                      </div>
-                      <div id="report-content" className="space-y-4">
-                        {doctorStats.map((doc, idx) => (
-                          <div key={doc.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                             <div className="font-black text-gray-400 w-6 text-center">{idx + 1}</div>
-                             <img src={doc.image} className="w-12 h-12 rounded-full object-cover" />
-                             <div className="flex-1">
-                               <h4 className="font-bold text-gray-900">{doc.name}</h4>
-                               <div className="flex gap-4 text-xs mt-1">
-                                 <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded">كشف: {doc.bookingsCount}</span>
-                                 <span className="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">عملية: {doc.operationsCount}</span>
-                                </div>
-                             </div>
-                             <div className="text-right">
-                               <p className="text-xs text-gray-400 font-bold mb-1">الإجمالي</p>
-                               <p className="text-xl font-black text-gray-800">{doc.total}</p>
-                             </div>
-                             <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-                               <div className="h-full bg-blue-500" style={{ width: `${(doc.total / maxStatValue) * 100}%` }}></div>
-                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <PatientStats
+                    bookings={allBookings}
+                    operations={operations}
+                    contractingCompanies={contractingList.map(c => ({ id: c.id, name: c.name }))}
+                    cardClass={cardClass}
+                    inputClass={inputClass}
+                    onPrint={handlePrint}
+                  />
                 )}
                 {activeTab === 'hero-images' && (
                     <div className="space-y-8 animate-in fade-in duration-300">
