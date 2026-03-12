@@ -3904,12 +3904,20 @@ const handleNavigate = (sectionId: string) => {
   };
 
   const handleWhatsAppReminder = (item: any) => {
-      const cleanPhone = item.phone.replace(/[^0-9]/g, '');
-      const waPhone = cleanPhone.startsWith('0') ? '2' + cleanPhone : cleanPhone;
+      let cleanPhone = (item.phone || '').replace(/[\s\-\+\(\)]/g, '');
+      cleanPhone = cleanPhone.replace(/[^0-9]/g, '');
+      if (cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
+      else if (!cleanPhone.startsWith('2') && cleanPhone.length === 10) cleanPhone = '20' + cleanPhone;
       const rawTemplate = item.itemType === 'booking' ? settings.reminderSettings.whatsappBody : settings.reminderSettings.opWhatsappBody;
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       const text = encodeURIComponent(filledMessage);
-      window.open(`https://wa.me/${waPhone}?text=${text}`, '_blank', 'noopener,noreferrer');
+      const waUrl = `https://wa.me/${cleanPhone}?text=${text}`;
+      const newWin = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!newWin) {
+        // Popup blocked — show direct link
+        const fallback = confirm(`تعذر فتح واتساب تلقائياً.\nهل تريد نسخ الرابط؟`);
+        if (fallback) { navigator.clipboard.writeText(waUrl).then(() => alert('تم نسخ الرابط. الصقه في المتصفح.')).catch(() => { prompt('انسخ الرابط:', waUrl); }); }
+      }
       handleSendReminder(item.id, item.itemType);
       logContact('whatsapp', item, filledMessage);
   };
