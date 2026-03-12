@@ -1902,7 +1902,7 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'analytics' | 'payments' | 'contact-logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'patient-stats' | 'intelligence' | 'payments' | 'contact-logs'>('overview');
   const [contactLogs, setContactLogs] = useState<any[]>([]);
   const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
