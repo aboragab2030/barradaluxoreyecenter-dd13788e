@@ -435,7 +435,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 400,
     rating: 4.9,
     topSpecialties: ['الفيمتو ليزك', 'المياه البيضاء', 'أمراض القرنية'],
-    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
+    availableDates: [new Date().toISOString().split('T')[0]],
     patientsPerHour: 4,
     experience: 15,
     education: 'دكتوراه طب وجراحة العيون - جامعة القاهرة',
@@ -452,7 +452,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 300,
     rating: 4.8,
     topSpecialties: ['علاج الحول', 'فحص المواليد', 'القنوات الدمعية'],
-    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
+    availableDates: [new Date().toISOString().split('T')[0]],
     patientsPerHour: 3,
     experience: 10,
     education: 'ماجستير عيون الأطفال - جامعة عين شمس',
@@ -469,7 +469,7 @@ const INITIAL_DOCTORS: Doctor[] = [
     fee: 500,
     rating: 4.7,
     topSpecialties: ['جراحة الشبكية', 'انفصال الشبكية', 'النزيف الزجاجي'],
-    availableDates: (() => { const dates: string[] = []; for (let i = 0; i <= 14; i++) { const d = new Date(); d.setDate(d.getDate() + i); dates.push(d.toISOString().split('T')[0]); } return dates; })(),
+    availableDates: [new Date().toISOString().split('T')[0]],
     patientsPerHour: 2,
     experience: 20,
     education: 'زمالة كلية الجراحين الملكية - بريطانيا',
@@ -644,7 +644,7 @@ const BookingModal = ({
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d > todayStr).sort() || [];
+    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d !== todayStr) || [];
 
     // Get service price based on selection
     const selectedService = services.find(s => s.title === service);
@@ -731,24 +731,12 @@ const BookingModal = ({
             const initialDocId = doctor?.id || 0;
             setSelectedDoctorId(initialDocId);
             const initialDoc = doctor ? realtimeDoctors.find(d => d.id === initialDocId) : null;
-            const validDates = initialDoc?.availableDates.filter(d => d > todayStr).sort() || [];
-            setDate(validDates[0] || tomorrowStr);
+            const firstValidDate = initialDoc?.availableDates.find(d => d !== todayStr) || tomorrowStr;
+            setDate(firstValidDate);
             setTime('');
             setContractingId(undefined);
         }
     }, [isOpen, initialData, doctor, services, realtimeDoctors]);
-
-    // عند تغيير الطبيب، تحديث التاريخ لأول يوم متاح مستقبلي
-    useEffect(() => {
-        if (!isOpen || !currentSelectedDoctor) return;
-        const validDates = currentSelectedDoctor.availableDates.filter(d => d > todayStr).sort();
-        if (validDates.length > 0 && !validDates.includes(date)) {
-            setDate(validDates[0]);
-        } else if (validDates.length === 0) {
-            setDate(tomorrowStr);
-        }
-        setTime('');
-    }, [selectedDoctorId]);
 
     if (!isOpen) return null;
 
