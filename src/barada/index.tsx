@@ -1056,7 +1056,7 @@ const BookingModal = ({
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المحافظة</label>
-                    <select value={governorate} onChange={e => setGovernorate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                    <select value={governorate} onChange={e => { setGovernorate(e.target.value); setCenter(''); }} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
                         <option value="" disabled>-- اختر المحافظة --</option>
                         {EGYPT_GOVERNORATES.map(g => <option key={g} value={g}>{g}</option>)}
                     </select>
@@ -1065,7 +1065,14 @@ const BookingModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المركز / المدينة</label>
-                    <input type="text" value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" placeholder="مثال: مدينة نصر" />
+                    {governorate && EGYPT_CENTERS[governorate] ? (
+                        <select value={center} onChange={e => setCenter(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
+                            <option value="" disabled>-- اختر المركز --</option>
+                            {EGYPT_CENTERS[governorate].map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    ) : (
+                        <input type="text" value={center} onChange={e => setCenter(e.target.value)} disabled={!governorate} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold disabled:opacity-50" placeholder={governorate ? 'أدخل المركز' : 'اختر المحافظة أولاً'} />
+                    )}
                 </div>
                 <div className="space-y-1.5">
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">نوع الكشف</label>
