@@ -58,6 +58,10 @@ const combineStaffData = (profiles: any[], roles: any[]): StaffMember[] => {
 export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
   const { enabled = true } = options;
   
+  // Store options in ref to avoid re-render loops
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  
   // Store profiles and roles separately for combining
   const profilesRef = useRef<any[]>([]);
   const rolesRef = useRef<any[]>([]);
