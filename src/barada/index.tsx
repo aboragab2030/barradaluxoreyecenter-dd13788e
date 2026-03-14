@@ -3504,11 +3504,13 @@ const App = () => {
   }, [realtimeData.bookings]);
 
   // Internal Booking Test Mode — runs once in dev, logs to console only
+  const hasRunBookingTest = useRef(false);
   useEffect(() => {
-    if (import.meta.env.DEV && doctors.length > 0) {
+    if (import.meta.env.DEV && doctors.length > 0 && !hasRunBookingTest.current) {
+      hasRunBookingTest.current = true;
       runBookingTestMode(doctors, settings);
     }
-  }, [doctors.length > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [doctors]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (realtimeData.operations.length > 0) {

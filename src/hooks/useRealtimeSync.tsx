@@ -88,10 +88,10 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
     const staffMembers = combineStaffData(profilesRef.current, rolesRef.current);
     setData(prev => {
       const newData = { ...prev, staffMembers };
-      options.onStaffMembersChange?.(staffMembers);
+      optionsRef.current.onStaffMembersChange?.(staffMembers);
       return newData;
     });
-  }, [options]);
+  }, []);
 
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
