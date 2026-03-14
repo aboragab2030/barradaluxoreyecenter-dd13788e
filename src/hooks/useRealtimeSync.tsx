@@ -208,16 +208,13 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       let newTableData = [...prev[table]];
       
       if (payload.eventType === 'INSERT') {
-        // Add new record at the beginning
         newTableData = [payload.new, ...newTableData];
       } else if (payload.eventType === 'UPDATE') {
-        // Update existing record
         const index = newTableData.findIndex((item: any) => item.id === payload.new.id);
         if (index !== -1) {
           newTableData[index] = payload.new;
         }
       } else if (payload.eventType === 'DELETE') {
-        // Remove deleted record
         newTableData = newTableData.filter((item: any) => item.id !== payload.old.id);
       }
       
@@ -226,34 +223,34 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       // Call appropriate callback
       switch (table) {
         case 'bookings':
-          options.onBookingsChange?.(newData.bookings);
+          optionsRef.current.onBookingsChange?.(newData.bookings);
           break;
         case 'operations':
-          options.onOperationsChange?.(newData.operations);
+          optionsRef.current.onOperationsChange?.(newData.operations);
           break;
         case 'payments':
-          options.onPaymentsChange?.(newData.payments);
+          optionsRef.current.onPaymentsChange?.(newData.payments);
           break;
         case 'appNotifications':
-          options.onNotificationsChange?.(newData.appNotifications);
+          optionsRef.current.onNotificationsChange?.(newData.appNotifications);
           break;
         case 'complaints':
-          options.onComplaintsChange?.(newData.complaints);
+          optionsRef.current.onComplaintsChange?.(newData.complaints);
           break;
         case 'doctors':
-          options.onDoctorsChange?.(newData.doctors);
+          optionsRef.current.onDoctorsChange?.(newData.doctors);
           break;
         case 'services':
-          options.onServicesChange?.(newData.services);
+          optionsRef.current.onServicesChange?.(newData.services);
           break;
         case 'contractingCompanies':
-          options.onContractingCompaniesChange?.(newData.contractingCompanies);
+          optionsRef.current.onContractingCompaniesChange?.(newData.contractingCompanies);
           break;
       }
       
       return newData;
     });
-  }, [options]);
+  }, []);
 
   // Set up realtime subscriptions
   useEffect(() => {
