@@ -147,15 +147,15 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       setData(newData);
       
       // Call individual callbacks
-      options.onBookingsChange?.(newData.bookings);
-      options.onOperationsChange?.(newData.operations);
-      options.onPaymentsChange?.(newData.payments);
-      options.onNotificationsChange?.(newData.appNotifications);
-      options.onComplaintsChange?.(newData.complaints);
-      options.onDoctorsChange?.(newData.doctors);
-      options.onServicesChange?.(newData.services);
-      options.onContractingCompaniesChange?.(newData.contractingCompanies);
-      options.onStaffMembersChange?.(newData.staffMembers);
+      optionsRef.current.onBookingsChange?.(newData.bookings);
+      optionsRef.current.onOperationsChange?.(newData.operations);
+      optionsRef.current.onPaymentsChange?.(newData.payments);
+      optionsRef.current.onNotificationsChange?.(newData.appNotifications);
+      optionsRef.current.onComplaintsChange?.(newData.complaints);
+      optionsRef.current.onDoctorsChange?.(newData.doctors);
+      optionsRef.current.onServicesChange?.(newData.services);
+      optionsRef.current.onContractingCompaniesChange?.(newData.contractingCompanies);
+      optionsRef.current.onStaffMembersChange?.(newData.staffMembers);
       
     } catch (err) {
       console.error('Error fetching initial data:', err);
@@ -163,7 +163,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [options]);
+  }, []);
 
   // Handle profiles realtime changes
   const handleProfilesChange = useCallback((
