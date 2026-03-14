@@ -58,6 +58,10 @@ const combineStaffData = (profiles: any[], roles: any[]): StaffMember[] => {
 export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
   const { enabled = true } = options;
   
+  // Store options in ref to avoid re-render loops
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+  
   // Store profiles and roles separately for combining
   const profilesRef = useRef<any[]>([]);
   const rolesRef = useRef<any[]>([]);
@@ -84,10 +88,10 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
     const staffMembers = combineStaffData(profilesRef.current, rolesRef.current);
     setData(prev => {
       const newData = { ...prev, staffMembers };
-      options.onStaffMembersChange?.(staffMembers);
+      optionsRef.current.onStaffMembersChange?.(staffMembers);
       return newData;
     });
-  }, [options]);
+  }, []);
 
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
@@ -143,15 +147,15 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       setData(newData);
       
       // Call individual callbacks
-      options.onBookingsChange?.(newData.bookings);
-      options.onOperationsChange?.(newData.operations);
-      options.onPaymentsChange?.(newData.payments);
-      options.onNotificationsChange?.(newData.appNotifications);
-      options.onComplaintsChange?.(newData.complaints);
-      options.onDoctorsChange?.(newData.doctors);
-      options.onServicesChange?.(newData.services);
-      options.onContractingCompaniesChange?.(newData.contractingCompanies);
-      options.onStaffMembersChange?.(newData.staffMembers);
+      optionsRef.current.onBookingsChange?.(newData.bookings);
+      optionsRef.current.onOperationsChange?.(newData.operations);
+      optionsRef.current.onPaymentsChange?.(newData.payments);
+      optionsRef.current.onNotificationsChange?.(newData.appNotifications);
+      optionsRef.current.onComplaintsChange?.(newData.complaints);
+      optionsRef.current.onDoctorsChange?.(newData.doctors);
+      optionsRef.current.onServicesChange?.(newData.services);
+      optionsRef.current.onContractingCompaniesChange?.(newData.contractingCompanies);
+      optionsRef.current.onStaffMembersChange?.(newData.staffMembers);
       
     } catch (err) {
       console.error('Error fetching initial data:', err);
@@ -159,7 +163,7 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
     } finally {
       setIsLoading(false);
     }
-  }, [options]);
+  }, []);
 
   // Handle profiles realtime changes
   const handleProfilesChange = useCallback((
@@ -204,16 +208,13 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       let newTableData = [...prev[table]];
       
       if (payload.eventType === 'INSERT') {
-        // Add new record at the beginning
         newTableData = [payload.new, ...newTableData];
       } else if (payload.eventType === 'UPDATE') {
-        // Update existing record
         const index = newTableData.findIndex((item: any) => item.id === payload.new.id);
         if (index !== -1) {
           newTableData[index] = payload.new;
         }
       } else if (payload.eventType === 'DELETE') {
-        // Remove deleted record
         newTableData = newTableData.filter((item: any) => item.id !== payload.old.id);
       }
       
@@ -222,34 +223,34 @@ export function useRealtimeSync(options: UseRealtimeSyncOptions = {}) {
       // Call appropriate callback
       switch (table) {
         case 'bookings':
-          options.onBookingsChange?.(newData.bookings);
+          optionsRef.current.onBookingsChange?.(newData.bookings);
           break;
         case 'operations':
-          options.onOperationsChange?.(newData.operations);
+          optionsRef.current.onOperationsChange?.(newData.operations);
           break;
         case 'payments':
-          options.onPaymentsChange?.(newData.payments);
+          optionsRef.current.onPaymentsChange?.(newData.payments);
           break;
         case 'appNotifications':
-          options.onNotificationsChange?.(newData.appNotifications);
+          optionsRef.current.onNotificationsChange?.(newData.appNotifications);
           break;
         case 'complaints':
-          options.onComplaintsChange?.(newData.complaints);
+          optionsRef.current.onComplaintsChange?.(newData.complaints);
           break;
         case 'doctors':
-          options.onDoctorsChange?.(newData.doctors);
+          optionsRef.current.onDoctorsChange?.(newData.doctors);
           break;
         case 'services':
-          options.onServicesChange?.(newData.services);
+          optionsRef.current.onServicesChange?.(newData.services);
           break;
         case 'contractingCompanies':
-          options.onContractingCompaniesChange?.(newData.contractingCompanies);
+          optionsRef.current.onContractingCompaniesChange?.(newData.contractingCompanies);
           break;
       }
       
       return newData;
     });
-  }, [options]);
+  }, []);
 
   // Set up realtime subscriptions
   useEffect(() => {
