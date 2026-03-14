@@ -694,6 +694,12 @@ const BookingModal = ({
 
     const availableSlots = getAvailableSlots();
 
+    // Reset time when doctor or date changes (after initial load)
+    useEffect(() => {
+        if (!isOpen || !hasInitialized.current) return;
+        setTime('');
+    }, [selectedDoctorId, date]);
+
     useEffect(() => {
         // Reset the flag when modal closes
         if (!isOpen) {
