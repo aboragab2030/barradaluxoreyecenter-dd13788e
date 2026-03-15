@@ -130,20 +130,16 @@ serve(async (req) => {
 
     const newUserId = newUser.user.id;
 
-    // Create profile
+    // Upsert profile (update if exists, insert if not)
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
-      .insert({
+      .upsert({
         user_id: newUserId,
         name: name.trim(),
         login_username: loginUsername?.trim() || null,
         permissions: validPermissions,
         is_active: true,
-      });
-
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
-    }
+      }, { onConflict: 'user_id' });
 
     // Create role
     const { error: roleInsertError } = await supabaseAdmin
