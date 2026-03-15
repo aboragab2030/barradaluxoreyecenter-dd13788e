@@ -3875,7 +3875,6 @@ const handleNavigate = (sectionId: string) => {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      }
       handleSendReminder(item.id, item.itemType);
       logContact('whatsapp', item, filledMessage);
   };
