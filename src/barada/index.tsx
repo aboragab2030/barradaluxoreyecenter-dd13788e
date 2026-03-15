@@ -726,7 +726,9 @@ const BookingModal = ({
             setService(initialData.service);
             setDate(initialData.date);
             setTime(initialData.time);
-            setSelectedDoctorId(initialData.doctorId);
+            // If doctorId is 0 (null in DB), resolve by matching doctor name
+            const resolvedDoctorId = initialData.doctorId || realtimeDoctors.find(d => d.name === initialData.doctorName)?.id || 0;
+            setSelectedDoctorId(resolvedDoctorId);
             setContractingId(initialData.contractingCompanyId);
             if (initialData.paymentMethod) setSelectedPaymentMethod(initialData.paymentMethod);
         } else {
