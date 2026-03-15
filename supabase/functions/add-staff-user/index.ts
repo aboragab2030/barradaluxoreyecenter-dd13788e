@@ -88,7 +88,8 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Create auth user
+    // Try to create auth user, handle existing email
+    let newUserId: string;
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
       password,
@@ -96,11 +97,35 @@ serve(async (req) => {
     });
 
     if (createError) {
-      console.error("Error creating user:", createError);
-      return new Response(
-        JSON.stringify({ error: createError.message || "Failed to create user" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // If user already exists, find them and update instead
+      if (createError.message?.includes("already been registered")) {
+        const { data: existingUsers, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        if (listError) {
+          return new Response(
+            JSON.stringify({ error: "Failed to look up existing user" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        const existingUser = existingUsers.users.find(u => u.email === email.trim());
+        if (!existingUser) {
+          return new Response(
+            JSON.stringify({ error: "User exists but could not be found" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        newUserId = existingUser.id;
+
+        // Update password if provided
+        await supabaseAdmin.auth.admin.updateUserById(newUserId, { password });
+      } else {
+        console.error("Error creating user:", createError);
+        return new Response(
+          JSON.stringify({ error: createError.message || "Failed to create user" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else {
+      newUserId = newUser.user.id;
     }
 
     const newUserId = newUser.user.id;
