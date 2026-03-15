@@ -3485,7 +3485,7 @@ const App = () => {
         center: b.center || undefined,
         notes: b.notes || undefined,
         bookingType: b.booking_type || 'cash',
-        doctorId: parseInt(b.doctor_id?.slice(-8) || '0', 16) || 0,
+        doctorId: b.doctor_id ? (parseInt(b.doctor_id.slice(-8), 16) || 0) : 0,
         doctorName: b.doctor_name,
         service: b.service,
         date: b.date,
