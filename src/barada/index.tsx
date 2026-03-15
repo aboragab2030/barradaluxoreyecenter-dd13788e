@@ -3867,11 +3867,14 @@ const handleNavigate = (sectionId: string) => {
       const filledMessage = fillReminderTemplate(rawTemplate, item);
       const text = encodeURIComponent(filledMessage);
       const waUrl = `https://wa.me/${cleanPhone}?text=${text}`;
-      const newWin = window.open(waUrl, '_blank', 'noopener,noreferrer');
-      if (!newWin) {
-        // Popup blocked — show direct link
-        const fallback = confirm(`تعذر فتح واتساب تلقائياً.\nهل تريد نسخ الرابط؟`);
-        if (fallback) { navigator.clipboard.writeText(waUrl).then(() => alert('تم نسخ الرابط. الصقه في المتصفح.')).catch(() => { prompt('انسخ الرابط:', waUrl); }); }
+      // Use anchor element to avoid iframe/popup blocking
+      const a = document.createElement('a');
+      a.href = waUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       }
       handleSendReminder(item.id, item.itemType);
       logContact('whatsapp', item, filledMessage);
