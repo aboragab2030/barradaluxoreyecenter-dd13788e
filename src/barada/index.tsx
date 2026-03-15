@@ -726,7 +726,9 @@ const BookingModal = ({
             setService(initialData.service);
             setDate(initialData.date);
             setTime(initialData.time);
-            setSelectedDoctorId(initialData.doctorId);
+            // If doctorId is 0 (null in DB), resolve by matching doctor name
+            const resolvedDoctorId = initialData.doctorId || realtimeDoctors.find(d => d.name === initialData.doctorName)?.id || 0;
+            setSelectedDoctorId(resolvedDoctorId);
             setContractingId(initialData.contractingCompanyId);
             if (initialData.paymentMethod) setSelectedPaymentMethod(initialData.paymentMethod);
         } else {
@@ -3485,7 +3487,7 @@ const App = () => {
         center: b.center || undefined,
         notes: b.notes || undefined,
         bookingType: b.booking_type || 'cash',
-        doctorId: parseInt(b.doctor_id?.slice(-8) || '0', 16) || 0,
+        doctorId: b.doctor_id ? (parseInt(b.doctor_id.slice(-8), 16) || 0) : 0,
         doctorName: b.doctor_name,
         service: b.service,
         date: b.date,
