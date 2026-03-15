@@ -141,16 +141,19 @@ serve(async (req) => {
         is_active: true,
       }, { onConflict: 'user_id' });
 
-    // Create role
+    // Upsert role
     const { error: roleInsertError } = await supabaseAdmin
       .from("user_roles")
-      .insert({
+      .upsert({
         user_id: newUserId,
         role: validRole,
-      });
+      }, { onConflict: 'user_id,role' })
+      .select();
 
     if (roleInsertError) {
-      console.error("Error creating role:", roleInsertError);
+      // If upsert fails due to conflict handling, try delete+insert
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
+      await supabaseAdmin.from("user_roles").insert({ user_id: newUserId, role: validRole });
     }
 
     return new Response(
