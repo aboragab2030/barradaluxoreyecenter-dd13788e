@@ -1136,11 +1136,12 @@ const BookingModal = ({
                 </div>
             </div>
             {/* Display Doctor Fee */}
-            {currentSelectedDoctor && currentSelectedDoctor.fee > 0 && (
+            {currentSelectedDoctor && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="text-emerald-600 font-bold">رسوم الطبيب:</span>
-                        <span className="text-emerald-700 font-black text-lg">{currentSelectedDoctor.fee} ج.م</span>
+                        <span className="text-emerald-700 font-black text-lg">{doctorFee} ج.م</span>
+                        {isFollowUpVisit && <span className="text-xs text-gray-500 font-bold">(متابعة - مجاناً)</span>}
                     </div>
                     {totalPayment > 0 && (
                         <div className="text-right">
