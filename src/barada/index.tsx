@@ -670,7 +670,19 @@ const BookingModal = ({
 
     const getAvailableSlots = () => {
         if (!currentSelectedDoctor || !date) return TIME_SLOTS;
+        
+        // Filter by center working hours first
+        const friday = isFriday(date);
+        const hoursText = friday ? settings.workingHours.friday : settings.workingHours.weekdays;
+        const parsedHours = parseWorkingHoursText(hoursText);
+        
         return TIME_SLOTS.filter(slot => {
+            // Filter out slots outside center working hours
+            if (parsedHours) {
+                const slotMinutes = timeSlotTo24hMinutes(slot);
+                if (slotMinutes < parsedHours.start || slotMinutes >= parsedHours.end) return false;
+            }
+            
             const isTaken = bookings.some(b => 
                 b.doctorId === selectedDoctorId && 
                 b.date === date && 
