@@ -657,8 +657,9 @@ const BookingModal = ({
     const selectedService = services.find(s => s.title === service);
     const servicePrice = selectedService?.price || 0;
     
-    // Get doctor fee based on selection
-    const doctorFee = currentSelectedDoctor?.fee || 0;
+    // Get doctor fee based on selection - fee is 0 for follow-up visits
+    const isFollowUpVisit = service.includes('متابعة كشف') || service.includes('متابعة الكشف') || service.includes('متابعة عملية') || service.includes('متابعة العملية');
+    const doctorFee = isFollowUpVisit ? 0 : (currentSelectedDoctor?.fee || 0);
     
     // Total required payment
     const totalPayment = servicePrice + doctorFee;
