@@ -657,8 +657,9 @@ const BookingModal = ({
     const selectedService = services.find(s => s.title === service);
     const servicePrice = selectedService?.price || 0;
     
-    // Get doctor fee based on selection
-    const doctorFee = currentSelectedDoctor?.fee || 0;
+    // Get doctor fee based on selection - fee is 0 for follow-up visits
+    const isFollowUpVisit = service.includes('متابعة كشف') || service.includes('متابعة الكشف') || service.includes('متابعة عملية') || service.includes('متابعة العملية');
+    const doctorFee = isFollowUpVisit ? 0 : (currentSelectedDoctor?.fee || 0);
     
     // Total required payment
     const totalPayment = servicePrice + doctorFee;
@@ -669,7 +670,19 @@ const BookingModal = ({
 
     const getAvailableSlots = () => {
         if (!currentSelectedDoctor || !date) return TIME_SLOTS;
+        
+        // Filter by center working hours first
+        const friday = isFriday(date);
+        const hoursText = friday ? settings.workingHours.friday : settings.workingHours.weekdays;
+        const parsedHours = parseWorkingHoursText(hoursText);
+        
         return TIME_SLOTS.filter(slot => {
+            // Filter out slots outside center working hours
+            if (parsedHours) {
+                const slotMinutes = timeSlotTo24hMinutes(slot);
+                if (slotMinutes < parsedHours.start || slotMinutes >= parsedHours.end) return false;
+            }
+            
             const isTaken = bookings.some(b => 
                 b.doctorId === selectedDoctorId && 
                 b.date === date && 
@@ -1135,11 +1148,12 @@ const BookingModal = ({
                 </div>
             </div>
             {/* Display Doctor Fee */}
-            {currentSelectedDoctor && currentSelectedDoctor.fee > 0 && (
+            {currentSelectedDoctor && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <span className="text-emerald-600 font-bold">رسوم الطبيب:</span>
-                        <span className="text-emerald-700 font-black text-lg">{currentSelectedDoctor.fee} ج.م</span>
+                        <span className="text-emerald-700 font-black text-lg">{doctorFee} ج.م</span>
+                        {isFollowUpVisit && <span className="text-xs text-gray-500 font-bold">(متابعة - مجاناً)</span>}
                     </div>
                     {totalPayment > 0 && (
                         <div className="text-right">
