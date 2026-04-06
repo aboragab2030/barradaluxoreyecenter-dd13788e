@@ -2883,9 +2883,13 @@ const handlePrint = (title: string, contentHtml: string) => {
                                     </div>
                                  </div>
                                  <div className="flex gap-2">
-                                    <button onClick={() => handleSmsReminder(item)} className="bg-amber-500 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 hover:scale-105 transition-all"><Mail size={16}/> إرسال SMS</button>
-                                    <button onClick={() => handleWhatsAppReminder(item)} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-green-700 shadow-lg shadow-green-100 hover:scale-105 transition-all"><MessageCircle size={16}/> واتساب</button>
-                                 </div>
+                                     <button onClick={() => handleSmsReminder(item)} className="bg-amber-500 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-amber-600 shadow-lg shadow-amber-100 hover:scale-105 transition-all"><Mail size={16}/> إرسال SMS</button>
+                                     {item.phone && item.phone.replace(/\D/g, '').length >= 10 ? (
+                                       <button onClick={() => handleWhatsAppReminder(item)} className="bg-green-600 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-green-700 shadow-lg shadow-green-100 hover:scale-105 transition-all"><MessageCircle size={16}/> واتساب</button>
+                                     ) : (
+                                       <button disabled title="رقم الهاتف غير متوفر" className="bg-gray-300 text-gray-500 px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-2 cursor-not-allowed opacity-60"><MessageCircle size={16}/> واتساب</button>
+                                     )}
+                                  </div>
                               </div>
                            ))}
                         </div>
