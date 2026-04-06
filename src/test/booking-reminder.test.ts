@@ -220,8 +220,8 @@ describe('WhatsApp phone validation for button', () => {
   });
 
   it('disables button for empty phone', () => {
-    const phone = '';
-    const isValid = phone && phone.replace(/\D/g, '').length >= 10;
+    const phone: string = '';
+    const isValid = phone.length > 0 && phone.replace(/\D/g, '').length >= 10;
     expect(isValid).toBeFalsy();
   });
 });
