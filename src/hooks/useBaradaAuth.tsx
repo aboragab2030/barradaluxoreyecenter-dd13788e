@@ -94,7 +94,7 @@ export function useBaradaAuth() {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .order('role', { ascending: true });
 
       if (roleError && roleError.code !== 'PGRST116') {
         console.error('Error fetching user role');
