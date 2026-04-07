@@ -1550,7 +1550,6 @@ const Navbar = ({
   ] : [
     { name: t.home, id: 'home' },
     { name: t.about, id: 'about' },
-    { name: t.partners, id: 'partners' },
     { name: t.doctors, id: 'doctors' },
     { name: t.services, id: 'services' },
     { name: t.myBookings, id: 'my-bookings' },
