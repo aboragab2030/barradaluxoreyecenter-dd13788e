@@ -101,7 +101,7 @@ export function useBaradaAuth() {
         return null;
       }
 
-      const role = roleData?.role || 'staff';
+      const role = roleData?.some(r => r.role === 'admin') ? 'admin' : (roleData?.[0]?.role || 'staff');
       
       // Admin gets all permissions, staff gets permissions from profile or default
       let permissions: string[];
