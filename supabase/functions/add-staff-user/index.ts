@@ -128,7 +128,7 @@ serve(async (req) => {
       newUserId = newUser.user.id;
     }
 
-    const newUserId = newUser.user.id;
+    // newUserId is already set above
 
     // Upsert profile (update if exists, insert if not)
     const { error: profileError } = await supabaseAdmin
