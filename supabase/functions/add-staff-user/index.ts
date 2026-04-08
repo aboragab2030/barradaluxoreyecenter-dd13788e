@@ -41,9 +41,9 @@ serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .single();
+      .eq("role", "admin");
 
-    if (roleError || roleData?.role !== "admin") {
+    if (roleError || !roleData || roleData.length === 0) {
       return new Response(
         JSON.stringify({ error: "Only admins can add users" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -128,7 +128,7 @@ serve(async (req) => {
       newUserId = newUser.user.id;
     }
 
-    const newUserId = newUser.user.id;
+    // newUserId is already set above
 
     // Upsert profile (update if exists, insert if not)
     const { error: profileError } = await supabaseAdmin
