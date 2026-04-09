@@ -3206,15 +3206,15 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
             <p className="text-gray-500 text-base font-medium">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
             <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-500/20"></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {partners.map((partner) => (
-            <div key={partner.id} className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 transition-all duration-500 group flex flex-col items-center p-8 hover:shadow-xl hover:-translate-y-2">
-              <div className="w-32 h-32 rounded-full border-4 border-gray-50 p-2 shadow-inner mb-6 flex items-center justify-center bg-white group-hover:scale-110 transition-transform">
-                <img src={partner.logo} className="w-full h-full object-contain" alt={partner.name} />
+            <div key={partner.id} className="bg-white p-8 rounded-[3rem] shadow-sm hover:shadow-2xl transition-all duration-500 text-center group border border-gray-100 hover:-translate-y-3 relative overflow-hidden flex flex-col h-full">
+              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
+              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <Handshake size={40} className="text-blue-600" />
               </div>
-              <h3 className="text-xl font-black mb-3 text-gray-900 group-hover:text-blue-600 text-center">{partner.name}</h3>
-              <div className="w-full h-px bg-gray-100 my-4"></div>
-              <p className="text-gray-500 text-sm font-bold text-center leading-relaxed">{partner.description}</p>
+              <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-blue-600">{partner.name}</h3>
+              <p className="text-gray-500 mb-8 leading-relaxed font-bold flex-grow">{partner.description}</p>
             </div>
           ))}
         </div>
