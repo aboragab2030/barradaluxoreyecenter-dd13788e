@@ -1402,7 +1402,7 @@ const SmartStatsBar = ({ settings }: { settings: AppSettings }) => {
     
     return (
         <div className="relative -mt-16 z-30 max-w-7xl mx-auto px-4">
-            <div className="bg-white/70 backdrop-blur-3xl border border-white/40 rounded-[3rem] shadow-[0_32px_64px_-15px_rgba(0,0,0,0.1)] p-8 md:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 relative overflow-hidden group">
+            <div className="glass-stats rounded-[3rem] p-8 md:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50/20 via-transparent to-emerald-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                 {settings.stats.map((stat, idx) => {
                     const StatIcon = icons[idx] || Award;
@@ -1426,7 +1426,7 @@ const SmartStatsBar = ({ settings }: { settings: AppSettings }) => {
 
 const AboutUs = ({ settings, t }: { settings: AppSettings, t: any }) => {
     return (
-        <div id="about" className="py-32 bg-white relative overflow-hidden scroll-mt-20">
+        <div id="about" className="py-32 relative overflow-hidden scroll-mt-20">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
                 <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-50 rounded-full blur-[120px] opacity-40"></div>
                 <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-50/50 rounded-full blur-[150px] opacity-40 translate-x-1/2 translate-y-1/2"></div>
@@ -1557,20 +1557,20 @@ const Navbar = ({
   ];
 
   return (
-    <nav className={`sticky w-full z-50 top-0 transition-all duration-300 ${
+    <nav className={`sticky w-full z-50 top-0 transition-all duration-300 glass-navbar ${
       isScrolled 
-        ? "bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-100 py-1" 
-        : "bg-white shadow-none py-3 border-b border-transparent"
+        ? "py-1" 
+        : "py-3"
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group" onClick={handleLogoClick}>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white overflow-hidden transition-transform group-hover:scale-105 active:scale-95">
+            <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer group glass-logo" onClick={handleLogoClick}>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105 active:scale-95">
                 {settings.logoUrl ? (
-                  <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain bg-white" />
+                  <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <Eye size={24} />
+                  <Eye size={24} className="text-emerald-600" />
                 )}
               </div>
               <span className="font-bold text-xl text-gray-800 tracking-tight">{settings.appName}</span>
@@ -3107,7 +3107,7 @@ const DoctorsList = ({ doctors, onBook, language, t }: { doctors: Doctor[], onBo
   const [searchTerm, setSearchTerm] = useState('');
   const filteredDoctors = doctors.filter(doc => doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.specialty.toLowerCase().includes(searchTerm.toLowerCase()));
   return (
-    <div id="doctors" className="py-24 bg-white relative overflow-hidden">
+    <div id="doctors" className="py-24 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 opacity-60"></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
@@ -3125,7 +3125,7 @@ const DoctorsList = ({ doctors, onBook, language, t }: { doctors: Doctor[], onBo
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           {filteredDoctors.map(doctor => (
-              <div key={doctor.id} className="group relative bg-white rounded-[3.5rem] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.1)] overflow-hidden transition-all duration-700 border border-gray-100 flex flex-col h-full hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] hover:-translate-y-4">
+              <div key={doctor.id} className="group relative glass-doctor-card rounded-[3.5rem] overflow-hidden transition-all duration-700 flex flex-col h-full">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 to-blue-400"></div>
                 
                 <div className="p-10 flex-grow flex flex-col">
@@ -3199,7 +3199,7 @@ const DoctorsList = ({ doctors, onBook, language, t }: { doctors: Doctor[], onBo
 const PartnersSection = ({ partners, language }: { partners: Partner[], language: 'ar' | 'en' }) => {
   if (partners.length === 0) return null;
   return (
-    <div id="partners" className="py-24 bg-gray-50/50">
+    <div id="partners" className="py-24 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">{language === 'ar' ? 'شركاء النجاح' : 'Our Partners'}</h2>
@@ -3208,7 +3208,7 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {partners.map((partner) => (
-            <div key={partner.id} className="bg-white p-8 rounded-[3rem] shadow-sm hover:shadow-2xl transition-all duration-500 text-center group border border-gray-100 hover:-translate-y-3 relative overflow-hidden flex flex-col h-full">
+            <div key={partner.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
               <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
               <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
                 <Handshake size={40} className="text-blue-600" />
@@ -3224,7 +3224,7 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
 };
 
 const Services = ({ services, language }: { services: ServiceItem[], language: 'ar' | 'en' }) => (
-    <div id="services" className="py-24 bg-white relative overflow-hidden">
+    <div id="services" className="py-24 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40"><div className="absolute top-20 right-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl"></div><div className="absolute bottom-20 left-10 w-48 h-48 bg-emerald-50 rounded-full blur-3xl"></div></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-20">
@@ -3237,7 +3237,7 @@ const Services = ({ services, language }: { services: ServiceItem[], language: '
           {services.map((service) => {
              const IconComp = ICON_MAP[service.iconName] || Eye;
              return (
-                <div key={service.id} className="bg-white p-8 rounded-[3rem] shadow-sm hover:shadow-2xl transition-all duration-500 text-center group border border-gray-100 hover:-translate-y-3 relative overflow-hidden flex flex-col h-full">
+                <div key={service.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
                     <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl ${service.color.replace('text', 'bg')}`}></div>
                     <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl ${service.color.replace('text', 'bg')}/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-500`}>
                         <IconComp size={40} className={service.color} />
@@ -3924,7 +3924,7 @@ const handleNavigate = (sectionId: string) => {
   };
 
   return (
-    <div dir={settings.language === 'ar' ? 'rtl' : 'ltr'} className={`font-sans ${settings.language === 'ar' ? 'font-cairo' : ''}`}>
+    <div dir={settings.language === 'ar' ? 'rtl' : 'ltr'} className={`font-sans barada-app-bg ${settings.language === 'ar' ? 'font-cairo' : ''}`}>
       <Navbar 
         onNavigate={handleNavigate} 
         onLoginClick={() => setActiveSection('login')} 
