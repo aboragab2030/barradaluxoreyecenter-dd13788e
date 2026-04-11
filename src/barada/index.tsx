@@ -1579,7 +1579,7 @@ const Navbar = ({
           </div>
           <div className="hidden md:flex items-center space-x-6 space-x-reverse">
             {navItems.map((item) => (
-              <button key={item.id} onClick={() => onNavigate(item.id)} className="text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-bold transition-colors whitespace-nowrap">
+              <button key={item.id} onClick={() => onNavigate(item.id)} className="text-gray-700 hover:text-emerald-600 px-3 py-2 rounded-md text-sm font-bold transition-all duration-300 whitespace-nowrap glass-btn-hover">
                 {item.name}
               </button>
             ))}
