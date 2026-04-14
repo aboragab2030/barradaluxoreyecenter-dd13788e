@@ -1402,20 +1402,20 @@ const SmartStatsBar = ({ settings }: { settings: AppSettings }) => {
     
     return (
         <div className="relative -mt-16 z-30 max-w-7xl mx-auto px-4">
-            <div className="glass-stats rounded-[3rem] p-8 md:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 relative overflow-hidden group">
+        <div className="glass-stats rounded-2xl p-6 md:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50/20 via-transparent to-emerald-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                 {settings.stats.map((stat, idx) => {
                     const StatIcon = icons[idx] || Award;
                     const colorClass = colors[idx] || 'text-gray-600';
                     return (
                         <div key={idx} className="relative flex flex-col items-center text-center group/item">
-                            {idx !== 0 && <div className="hidden lg:block absolute -right-6 top-1/2 -translate-y-1/2 w-px h-16 bg-gray-200/60"></div>}
-                            <div className={`p-5 rounded-[1.5rem] ${colorClass.replace('text', 'bg')}/10 mb-6 transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-lg group-hover/item:-translate-y-1 shadow-inner`}>
-                                <StatIcon className={`${colorClass} drop-shadow-sm`} size={38} />
+                            {idx !== 0 && <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-px h-12 bg-gray-200/60"></div>}
+                            <div className={`p-3 rounded-xl ${colorClass.replace('text', 'bg')}/10 mb-3 transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-lg group-hover/item:-translate-y-1`}>
+                                <StatIcon className={`${colorClass} drop-shadow-sm`} size={24} />
                             </div>
-                            <h4 className="text-3xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight group-hover/item:text-blue-700 transition-colors">{stat.value}</h4>
-                            <p className="text-gray-600 text-sm font-bold uppercase tracking-widest mb-2">{stat.label}</p>
-                            <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 group-hover/item:bg-white transition-colors">{stat.trend}</span>
+                            <h4 className="text-2xl md:text-3xl font-black text-gray-900 mb-1 tracking-tight group-hover/item:text-blue-700 transition-colors">{stat.value}</h4>
+                            <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-1">{stat.label}</p>
+                            <span className="text-[9px] font-black text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100 group-hover/item:bg-white transition-colors">{stat.trend}</span>
                         </div>
                     );
                 })}
@@ -3199,11 +3199,11 @@ const DoctorsList = ({ doctors, onBook, language, t }: { doctors: Doctor[], onBo
 const PartnersSection = ({ partners, language }: { partners: Partner[], language: 'ar' | 'en' }) => {
   if (partners.length === 0) return null;
   return (
-    <div id="partners" className="py-24 relative">
+    <div id="partners" className="py-16 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">{language === 'ar' ? 'شركاء النجاح' : 'Our Partners'}</h2>
-            <p className="text-gray-500 text-base font-medium">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 tracking-tight">{language === 'ar' ? 'شركاء النجاح' : 'Our Partners'}</h2>
+            <p className="text-gray-500 text-sm font-medium max-w-xl mx-auto">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
             <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-500/20"></div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
