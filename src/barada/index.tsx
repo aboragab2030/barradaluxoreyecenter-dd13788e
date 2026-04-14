@@ -3206,15 +3206,15 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
             <p className="text-gray-500 text-base font-medium">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
             <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-500/20"></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {partners.map((partner) => (
-            <div key={partner.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                <Handshake size={40} className="text-blue-600" />
+            <div key={partner.id} className="glass-service-card p-5 rounded-2xl transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
+              <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <Handshake size={26} className="text-blue-600" />
               </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-blue-600">{partner.name}</h3>
-              <p className="text-gray-500 mb-8 leading-relaxed font-bold flex-grow">{partner.description}</p>
+              <h3 className="text-sm font-black text-gray-900 mb-2 group-hover:text-blue-600 leading-tight">{partner.name}</h3>
+              <p className="text-gray-500 leading-relaxed text-xs font-medium flex-grow line-clamp-2">{partner.description}</p>
             </div>
           ))}
         </div>
@@ -3224,29 +3224,29 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
 };
 
 const Services = ({ services, language }: { services: ServiceItem[], language: 'ar' | 'en' }) => (
-    <div id="services" className="py-24 relative overflow-hidden">
+    <div id="services" className="py-16 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40"><div className="absolute top-20 right-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl"></div><div className="absolute bottom-20 left-10 w-48 h-48 bg-emerald-50 rounded-full blur-3xl"></div></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-20">
-            <span className="text-blue-600 text-xs font-black uppercase tracking-widest mb-4 inline-block bg-blue-50 px-4 py-2 rounded-full border border-blue-100">{language === 'ar' ? 'ما نقدمه لعينيك' : 'What we offer your eyes'}</span>
-            <h2 className="text-5xl font-black text-gray-900 tracking-tight leading-tight">{language === 'ar' ? 'خدماتنا الطبية المتكاملة' : 'Integrated Medical Services'}</h2>
-            <p className="text-gray-500 mt-4 max-w-2xl mx-auto text-lg font-medium">{language === 'ar' ? 'نقدم مجموعة واسعة من الخدمات المتخصصة بأعلى معايير الجودة العالمية وأحدث التقنيات.' : 'We offer a wide range of specialized services with the highest international quality standards and latest technology.'}</p>
-            <div className="w-20 h-1.5 bg-blue-600 mx-auto mt-8 rounded-full shadow-lg shadow-blue-200"></div>
+        <div className="text-center mb-12">
+            <span className="text-blue-600 text-xs font-black uppercase tracking-widest mb-3 inline-block bg-blue-50 px-4 py-2 rounded-full border border-blue-100">{language === 'ar' ? 'ما نقدمه لعينيك' : 'What we offer your eyes'}</span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">{language === 'ar' ? 'خدماتنا الطبية المتكاملة' : 'Integrated Medical Services'}</h2>
+            <p className="text-gray-500 mt-3 max-w-2xl mx-auto text-base font-medium">{language === 'ar' ? 'نقدم مجموعة واسعة من الخدمات المتخصصة بأعلى معايير الجودة العالمية وأحدث التقنيات.' : 'We offer a wide range of specialized services with the highest international quality standards and latest technology.'}</p>
+            <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-200"></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {services.map((service) => {
              const IconComp = ICON_MAP[service.iconName] || Eye;
              return (
-                <div key={service.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
-                    <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl ${service.color.replace('text', 'bg')}`}></div>
-                    <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl ${service.color.replace('text', 'bg')}/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-500`}>
-                        <IconComp size={40} className={service.color} />
+                <div key={service.id} className="glass-service-card p-5 rounded-2xl transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
+                    <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl ${service.color.replace('text', 'bg')}`}></div>
+                    <div className={`w-14 h-14 mx-auto mb-4 rounded-xl ${service.color.replace('text', 'bg')}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
+                        <IconComp size={26} className={service.color} />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-4">{service.title}</h3>
-                    <p className="text-gray-500 mb-8 leading-relaxed font-bold flex-grow">{service.description}</p>
+                    <h3 className="text-sm font-black text-gray-900 mb-2 leading-tight">{service.title}</h3>
+                    <p className="text-gray-500 mb-4 leading-relaxed text-xs font-medium flex-grow line-clamp-2">{service.description}</p>
                     <div className="mt-auto">
-                        <div className="w-full h-px bg-gray-100 mb-6"></div>
-                        <p className="text-3xl font-black text-blue-600 mb-2">{service.price} <span className="text-sm text-gray-400 font-bold">ج.م</span></p>
+                        <div className="w-full h-px bg-gray-100 mb-3"></div>
+                        <p className="text-lg font-black text-blue-600">{service.price} <span className="text-[10px] text-gray-400 font-bold">ج.م</span></p>
                     </div>
                 </div>
              );
