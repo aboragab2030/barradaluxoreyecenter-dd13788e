@@ -1402,20 +1402,20 @@ const SmartStatsBar = ({ settings }: { settings: AppSettings }) => {
     
     return (
         <div className="relative -mt-16 z-30 max-w-7xl mx-auto px-4">
-            <div className="glass-stats rounded-[3rem] p-8 md:p-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 relative overflow-hidden group">
+        <div className="glass-stats rounded-2xl p-6 md:p-8 grid grid-cols-2 lg:grid-cols-4 gap-6 relative overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-50/20 via-transparent to-emerald-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                 {settings.stats.map((stat, idx) => {
                     const StatIcon = icons[idx] || Award;
                     const colorClass = colors[idx] || 'text-gray-600';
                     return (
                         <div key={idx} className="relative flex flex-col items-center text-center group/item">
-                            {idx !== 0 && <div className="hidden lg:block absolute -right-6 top-1/2 -translate-y-1/2 w-px h-16 bg-gray-200/60"></div>}
-                            <div className={`p-5 rounded-[1.5rem] ${colorClass.replace('text', 'bg')}/10 mb-6 transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-lg group-hover/item:-translate-y-1 shadow-inner`}>
-                                <StatIcon className={`${colorClass} drop-shadow-sm`} size={38} />
+                            {idx !== 0 && <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-px h-12 bg-gray-200/60"></div>}
+                            <div className={`p-3 rounded-xl ${colorClass.replace('text', 'bg')}/10 mb-3 transition-all duration-500 group-hover/item:scale-110 group-hover/item:shadow-lg group-hover/item:-translate-y-1`}>
+                                <StatIcon className={`${colorClass} drop-shadow-sm`} size={24} />
                             </div>
-                            <h4 className="text-3xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight group-hover/item:text-blue-700 transition-colors">{stat.value}</h4>
-                            <p className="text-gray-600 text-sm font-bold uppercase tracking-widest mb-2">{stat.label}</p>
-                            <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 group-hover/item:bg-white transition-colors">{stat.trend}</span>
+                            <h4 className="text-2xl md:text-3xl font-black text-gray-900 mb-1 tracking-tight group-hover/item:text-blue-700 transition-colors">{stat.value}</h4>
+                            <p className="text-gray-600 text-xs font-bold uppercase tracking-widest mb-1">{stat.label}</p>
+                            <span className="text-[9px] font-black text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100 group-hover/item:bg-white transition-colors">{stat.trend}</span>
                         </div>
                     );
                 })}
@@ -3199,22 +3199,22 @@ const DoctorsList = ({ doctors, onBook, language, t }: { doctors: Doctor[], onBo
 const PartnersSection = ({ partners, language }: { partners: Partner[], language: 'ar' | 'en' }) => {
   if (partners.length === 0) return null;
   return (
-    <div id="partners" className="py-24 relative">
+    <div id="partners" className="py-16 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-            <h2 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">{language === 'ar' ? 'شركاء النجاح' : 'Our Partners'}</h2>
-            <p className="text-gray-500 text-base font-medium">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
+        <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3 tracking-tight">{language === 'ar' ? 'شركاء النجاح' : 'Our Partners'}</h2>
+            <p className="text-gray-500 text-sm font-medium max-w-xl mx-auto">{language === 'ar' ? 'نتشرف بالتعاون مع كبرى شركات التأمين والنقابات لتوفير رعاية صحية متميزة' : 'We are honored to cooperate with major insurance companies and unions to provide distinguished health care.'}</p>
             <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-500/20"></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {partners.map((partner) => (
-            <div key={partner.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
-              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
-              <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                <Handshake size={40} className="text-blue-600" />
+            <div key={partner.id} className="glass-service-card p-5 rounded-2xl transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
+              <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl bg-blue-500"></div>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                <Handshake size={26} className="text-blue-600" />
               </div>
-              <h3 className="text-2xl font-black text-gray-900 mb-4 group-hover:text-blue-600">{partner.name}</h3>
-              <p className="text-gray-500 mb-8 leading-relaxed font-bold flex-grow">{partner.description}</p>
+              <h3 className="text-sm font-black text-gray-900 mb-2 group-hover:text-blue-600 leading-tight">{partner.name}</h3>
+              <p className="text-gray-500 leading-relaxed text-xs font-medium flex-grow line-clamp-2">{partner.description}</p>
             </div>
           ))}
         </div>
@@ -3224,29 +3224,29 @@ const PartnersSection = ({ partners, language }: { partners: Partner[], language
 };
 
 const Services = ({ services, language }: { services: ServiceItem[], language: 'ar' | 'en' }) => (
-    <div id="services" className="py-24 relative overflow-hidden">
+    <div id="services" className="py-16 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-40"><div className="absolute top-20 right-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl"></div><div className="absolute bottom-20 left-10 w-48 h-48 bg-emerald-50 rounded-full blur-3xl"></div></div>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-20">
-            <span className="text-blue-600 text-xs font-black uppercase tracking-widest mb-4 inline-block bg-blue-50 px-4 py-2 rounded-full border border-blue-100">{language === 'ar' ? 'ما نقدمه لعينيك' : 'What we offer your eyes'}</span>
-            <h2 className="text-5xl font-black text-gray-900 tracking-tight leading-tight">{language === 'ar' ? 'خدماتنا الطبية المتكاملة' : 'Integrated Medical Services'}</h2>
-            <p className="text-gray-500 mt-4 max-w-2xl mx-auto text-lg font-medium">{language === 'ar' ? 'نقدم مجموعة واسعة من الخدمات المتخصصة بأعلى معايير الجودة العالمية وأحدث التقنيات.' : 'We offer a wide range of specialized services with the highest international quality standards and latest technology.'}</p>
-            <div className="w-20 h-1.5 bg-blue-600 mx-auto mt-8 rounded-full shadow-lg shadow-blue-200"></div>
+        <div className="text-center mb-12">
+            <span className="text-blue-600 text-xs font-black uppercase tracking-widest mb-3 inline-block bg-blue-50 px-4 py-2 rounded-full border border-blue-100">{language === 'ar' ? 'ما نقدمه لعينيك' : 'What we offer your eyes'}</span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">{language === 'ar' ? 'خدماتنا الطبية المتكاملة' : 'Integrated Medical Services'}</h2>
+            <p className="text-gray-500 mt-3 max-w-2xl mx-auto text-base font-medium">{language === 'ar' ? 'نقدم مجموعة واسعة من الخدمات المتخصصة بأعلى معايير الجودة العالمية وأحدث التقنيات.' : 'We offer a wide range of specialized services with the highest international quality standards and latest technology.'}</p>
+            <div className="w-16 h-1 bg-blue-600 mx-auto mt-6 rounded-full shadow-lg shadow-blue-200"></div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5">
           {services.map((service) => {
              const IconComp = ICON_MAP[service.iconName] || Eye;
              return (
-                <div key={service.id} className="glass-service-card p-8 rounded-[3rem] transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
-                    <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl ${service.color.replace('text', 'bg')}`}></div>
-                    <div className={`w-24 h-24 mx-auto mb-6 rounded-3xl ${service.color.replace('text', 'bg')}/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-500`}>
-                        <IconComp size={40} className={service.color} />
+                <div key={service.id} className="glass-service-card p-5 rounded-2xl transition-all duration-500 text-center group relative overflow-hidden flex flex-col h-full">
+                    <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-700 blur-2xl ${service.color.replace('text', 'bg')}`}></div>
+                    <div className={`w-14 h-14 mx-auto mb-4 rounded-xl ${service.color.replace('text', 'bg')}/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500`}>
+                        <IconComp size={26} className={service.color} />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 mb-4">{service.title}</h3>
-                    <p className="text-gray-500 mb-8 leading-relaxed font-bold flex-grow">{service.description}</p>
+                    <h3 className="text-sm font-black text-gray-900 mb-2 leading-tight">{service.title}</h3>
+                    <p className="text-gray-500 mb-4 leading-relaxed text-xs font-medium flex-grow line-clamp-2">{service.description}</p>
                     <div className="mt-auto">
-                        <div className="w-full h-px bg-gray-100 mb-6"></div>
-                        <p className="text-3xl font-black text-blue-600 mb-2">{service.price} <span className="text-sm text-gray-400 font-bold">ج.م</span></p>
+                        <div className="w-full h-px bg-gray-100 mb-3"></div>
+                        <p className="text-lg font-black text-blue-600">{service.price} <span className="text-[10px] text-gray-400 font-bold">ج.م</span></p>
                     </div>
                 </div>
              );

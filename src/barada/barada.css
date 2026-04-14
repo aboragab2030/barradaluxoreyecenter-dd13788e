@@ -65,18 +65,18 @@ body {
 
 /* Service & partner cards glass */
 .glass-service-card {
-  background: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
   transition: all 0.3s ease !important;
 }
 
 .glass-service-card:hover {
-  background: rgba(255, 255, 255, 0.75) !important;
-  transform: translateY(-8px) !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Doctor cards glass */
