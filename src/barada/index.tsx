@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { cairoTodayStr, addDaysStr, weekdayOf, arabicWeekday, upcomingDates } from './dateUtils';
 import { createRoot } from 'react-dom/client';
 import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from 'dompurify';
@@ -368,10 +369,7 @@ const parseWorkingHoursText = (text: string): { start: number; end: number } | n
 };
 
 // Helper: Check if a given date is Friday
-const isFriday = (dateStr: string): boolean => {
-  const d = new Date(dateStr);
-  return d.getDay() === 5;
-};
+const isFriday = (dateStr: string): boolean => weekdayOf(dateStr) === 5;
 
 const AVAILABLE_PERMISSIONS: PermissionOption[] = [
   { id: 'manage_doctors', label: 'إدارة الأطباء' },
@@ -647,11 +645,9 @@ const BookingModal = ({
     }, [isOpen, doctors]);
 
     const currentSelectedDoctor = realtimeDoctors.find(d => d.id === selectedDoctorId);
-    const todayStr = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    const filteredAvailableDates = currentSelectedDoctor?.availableDates.filter(d => d !== todayStr) || [];
+    const todayStr = cairoTodayStr();
+    const tomorrowStr = addDaysStr(todayStr, 1);
+    const filteredAvailableDates = upcomingDates(currentSelectedDoctor?.availableDates || [], todayStr);
 
     // Get service price based on selection
     const selectedService = services.find(s => s.title === service);
@@ -759,7 +755,7 @@ const BookingModal = ({
             const initialDocId = doctor?.id || 0;
             setSelectedDoctorId(initialDocId);
             const initialDoc = doctor ? realtimeDoctors.find(d => d.id === initialDocId) : null;
-            const firstValidDate = initialDoc?.availableDates.find(d => d !== todayStr) || tomorrowStr;
+            const firstValidDate = upcomingDates(initialDoc?.availableDates || [], todayStr)[0] || tomorrowStr;
             setDate(firstValidDate);
             setTime('');
             setContractingId(undefined);
@@ -881,12 +877,7 @@ const BookingModal = ({
         }
         
         // === التحقق من أن التاريخ ليس في الماضي أو منتهي ===
-        const selectedDate = new Date(date);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        selectedDate.setHours(0, 0, 0, 0);
-        
-        if (selectedDate < today) {
+        if (date < todayStr) {
             alert('عذراً، لا يمكن الحجز في تاريخ منتهي أو ماضٍ. يرجى اختيار تاريخ صالح.');
             return;
         }
@@ -1140,7 +1131,7 @@ const BookingModal = ({
                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">التاريخ</label>
                     {currentSelectedDoctor && filteredAvailableDates.length > 0 ? (
                         <select value={date} onChange={e => setDate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold">
-                            {filteredAvailableDates.map(d => <option key={d} value={d}>{d}</option>)}
+                            {filteredAvailableDates.map(d => <option key={d} value={d}>{arabicWeekday(d)} - {d}</option>)}
                         </select>
                     ) : (
                         <input type="date" value={date} min={tomorrowStr} onChange={e => setDate(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold" />
@@ -2317,7 +2308,7 @@ const handlePrint = (title: string, contentHtml: string) => {
   const filteredDoctorsList = doctors.filter(doc => doc.name.toLowerCase().includes(doctorSearchTerm.toLowerCase()));
 
   const getUpcomingReminders = () => {
-      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); const tomorrowStr = tomorrow.toISOString().split('T')[0];
+      const tomorrowStr = addDaysStr(cairoTodayStr(), 1);
       const bookingReminders = allBookings.filter(b => b.date === tomorrowStr && b.status === 'confirmed' && !b.reminderSent && (!reminderFilterService || b.service === reminderFilterService)).map(b => ({ id: b.id, patientName: b.patientName, phone: b.phone, date: b.date, time: b.time, doctorName: b.doctorName, service: b.service, itemType: 'booking' as const }));
       const operationReminders = operations.filter(op => op.date === tomorrowStr && op.status !== 'cancelled' && !op.reminderSent && (!reminderFilterService || op.surgeryType === reminderFilterService)).map(op => ({ id: op.id, patientName: op.patientName, phone: op.patientPhone || 'غير مسجل', date: op.date, time: 'موعد عملية', doctorName: op.doctorName, service: `عملية: ${op.surgeryType}`, itemType: 'operation' as const }));
       return [...bookingReminders, ...operationReminders];
