@@ -20,3 +20,16 @@ describe('Egypt date handling', () => {
       .toEqual(['2026-10-14', '2026-10-20']);
   });
 });
+
+import { isDayFull } from '@/barada/dateUtils';
+describe('doctor daily maximum', () => {
+  const b = (id: number, status = 'confirmed') => ({ id, doctorId: 1, date: '2026-10-20', status });
+  it('blocks the day once confirmed bookings reach the daily maximum', () => {
+    expect(isDayFull([b(1), b(2)], 1, '2026-10-20', 2)).toBe(true);
+    expect(isDayFull([b(1)], 1, '2026-10-20', 2)).toBe(false);
+  });
+  it('ignores cancelled bookings and the booking being edited', () => {
+    expect(isDayFull([b(1), b(2, 'cancelled')], 1, '2026-10-20', 2)).toBe(false);
+    expect(isDayFull([b(1), b(2)], 1, '2026-10-20', 2, 2)).toBe(false);
+  });
+});

@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { cairoTodayStr, addDaysStr, weekdayOf, arabicWeekday, upcomingDates } from './dateUtils';
+import { cairoTodayStr, addDaysStr, weekdayOf, arabicWeekday, upcomingDates, isDayFull } from './dateUtils';
 import { createRoot } from 'react-dom/client';
 import { supabase } from "@/integrations/supabase/client";
 import DOMPurify from 'dompurify';
@@ -647,7 +647,9 @@ const BookingModal = ({
     const currentSelectedDoctor = realtimeDoctors.find(d => d.id === selectedDoctorId);
     const todayStr = cairoTodayStr();
     const tomorrowStr = addDaysStr(todayStr, 1);
-    const filteredAvailableDates = upcomingDates(currentSelectedDoctor?.availableDates || [], todayStr);
+    const editingId = initialData ? initialData.id : undefined;
+    const filteredAvailableDates = upcomingDates(currentSelectedDoctor?.availableDates || [], todayStr)
+        .filter(d => d === initialData?.date || !currentSelectedDoctor || !isDayFull(bookings, currentSelectedDoctor.id, d, currentSelectedDoctor.maxPatients, editingId));
 
     // Get service price based on selection
     const selectedService = services.find(s => s.title === service);
@@ -679,6 +681,7 @@ const BookingModal = ({
                 if (slotMinutes < parsedHours.start || slotMinutes >= parsedHours.end) return false;
             }
             
+            if (isDayFull(bookings, currentSelectedDoctor.id, date, currentSelectedDoctor.maxPatients, initialData ? initialData.id : undefined)) return false;
             const isTaken = bookings.some(b => 
                 b.doctorId === selectedDoctorId && 
                 b.date === date && 
@@ -889,6 +892,10 @@ const BookingModal = ({
         }
         
         // === التحقق من أن التاريخ المختار من ضمن أيام عمل الطبيب المحددة فقط ===
+        if (isDayFull(bookings, currentSelectedDoctor.id, date, currentSelectedDoctor.maxPatients, initialData ? initialData.id : undefined)) {
+            alert('عذراً، اكتمل الحد الأقصى لعدد المرضى لهذا الطبيب في هذا اليوم. يرجى اختيار يوم آخر.');
+            return;
+        }
         if (!currentSelectedDoctor.availableDates.includes(date)) {
             alert('عذراً، الطبيب غير متاح في هذا اليوم. يرجى اختيار يوم من أيام عمل الطبيب المتاحة فقط.');
             return;
