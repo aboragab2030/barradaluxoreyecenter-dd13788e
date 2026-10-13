@@ -27,3 +27,12 @@ export const arabicWeekday = (dateStr: string): string => AR_DAYS[weekdayOf(date
 /** Upcoming dates only (strictly after today in Cairo), sorted ascending. */
 export const upcomingDates = (dates: string[], today: string = cairoTodayStr()): string[] =>
   [...new Set(dates)].filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d > today).sort();
+
+interface DayBooking { id?: unknown; doctorId: number; date: string; status: string }
+
+/** True when the doctor already has `maxPerDay` confirmed bookings on `date` (excluding the booking being edited). */
+export const isDayFull = (bookings: DayBooking[], doctorId: number, date: string, maxPerDay: number, excludeId?: unknown): boolean => {
+  if (!maxPerDay || maxPerDay <= 0) return false;
+  const count = bookings.filter(b => b.doctorId === doctorId && b.date === date && b.status === 'confirmed' && (excludeId === undefined || b.id !== excludeId)).length;
+  return count >= maxPerDay;
+};
