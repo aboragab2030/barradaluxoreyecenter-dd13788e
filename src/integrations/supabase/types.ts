@@ -385,6 +385,128 @@ export type Database = {
         }
         Relationships: []
       }
+      instapay_audit_events: {
+        Row: {
+          actor_id: string | null
+          actor_name: string
+          booking_ref: string
+          created_at: string
+          event_type: string
+          id: string
+          new_status: string | null
+          previous_status: string | null
+          reason: string | null
+          submission_id: string
+          verification_method: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_name?: string
+          booking_ref: string
+          created_at?: string
+          event_type: string
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          submission_id: string
+          verification_method?: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_name?: string
+          booking_ref?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          reason?: string | null
+          submission_id?: string
+          verification_method?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instapay_audit_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "instapay_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instapay_submissions: {
+        Row: {
+          amount_due: number
+          booking_id: string
+          booking_ref: string
+          created_at: string
+          declared_amount: number | null
+          evidence_path: string | null
+          id: string
+          payment_id: string | null
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewed_by_name: string | null
+          status: string
+          transaction_ref: string
+          updated_at: string
+          verified_amount: number | null
+        }
+        Insert: {
+          amount_due: number
+          booking_id: string
+          booking_ref: string
+          created_at?: string
+          declared_amount?: number | null
+          evidence_path?: string | null
+          id?: string
+          payment_id?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          status?: string
+          transaction_ref: string
+          updated_at?: string
+          verified_amount?: number | null
+        }
+        Update: {
+          amount_due?: number
+          booking_id?: string
+          booking_ref?: string
+          created_at?: string
+          declared_amount?: number | null
+          evidence_path?: string | null
+          id?: string
+          payment_id?: string | null
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewed_by_name?: string | null
+          status?: string
+          transaction_ref?: string
+          updated_at?: string
+          verified_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instapay_submissions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instapay_submissions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operations: {
         Row: {
           contracting_company_id: number | null
@@ -691,6 +813,7 @@ export type Database = {
       }
     }
     Functions: {
+      can_review_instapay: { Args: { _uid: string }; Returns: boolean }
       get_bookings_by_phone: {
         Args: { phone_number: string }
         Returns: {
@@ -701,6 +824,15 @@ export type Database = {
           created_at: string
           doctor_name: string
           service: string
+        }[]
+      }
+      get_instapay_status: {
+        Args: { _booking_ref: string; _phone: string }
+        Returns: {
+          amount_due: number
+          booking_ref: string
+          reason: string
+          status: string
         }[]
       }
       get_user_by_login_username: {
@@ -717,7 +849,34 @@ export type Database = {
         }
         Returns: boolean
       }
+      instapay_amount_due: {
+        Args: { _doctor_id: string; _doctor_name: string; _service: string }
+        Returns: number
+      }
       is_staff_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      review_instapay_payment: {
+        Args: {
+          _action: string
+          _reason: string
+          _submission_id: string
+          _verified_amount: number
+        }
+        Returns: string
+      }
+      submit_instapay_payment: {
+        Args: {
+          _booking_id: string
+          _declared_amount: number
+          _evidence_path: string
+          _phone: string
+          _transaction_ref: string
+        }
+        Returns: {
+          amount_due: number
+          booking_ref: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "staff"
