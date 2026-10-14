@@ -8,6 +8,13 @@
       "when": 1791971932808,
       "tag": "0000_instapay_manual_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791971943950,
+      "tag": "0001_instapay_evidence_policies",
+      "breakpoints": true
     }
   ]
 }
