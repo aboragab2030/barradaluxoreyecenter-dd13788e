@@ -45,6 +45,7 @@ const ALL_PERMISSIONS = [
   'manage_operations',
   'manage_users',
   'manage_payments',
+  'review_instapay',
   'view_audit_log',
 ];
 
