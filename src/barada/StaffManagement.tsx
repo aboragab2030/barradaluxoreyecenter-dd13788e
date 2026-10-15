@@ -18,6 +18,7 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'manage_operations', label: 'إدارة سجل العمليات' },
   { id: 'manage_users', label: 'إدارة المستخدمين' },
   { id: 'manage_payments', label: 'إدارة المدفوعات' },
+  { id: 'review_instapay', label: 'مراجعة مدفوعات إنستاباي' },
   { id: 'view_audit_log', label: 'سجل العمليات (Audit Log)' },
 ];
 

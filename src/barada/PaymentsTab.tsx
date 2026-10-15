@@ -6,6 +6,7 @@ import {
   CheckCircle, Clock, XCircle, RefreshCw, Printer, Wallet,
   Building2, FileText
 } from 'lucide-react';
+import { InstapayReviewPanel } from './InstapayFeature';
 
 // Types matching DB schema
 interface Payment {
@@ -486,6 +487,8 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ cardClass, inputClass,
           </div>
         </div>
       </div>
+
+      <InstapayReviewPanel cardClass={cardClass} inputClass={inputClass} />
     </div>
   );
 };
