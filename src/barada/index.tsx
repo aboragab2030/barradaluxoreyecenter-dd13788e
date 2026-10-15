@@ -34,6 +34,7 @@ import {
 
 import { ContractingSelector, ContractingManager, ContractingCompany, ContractingManagement } from './contracting';
 import { PaymentsTab } from './PaymentsTab';
+import { InstapaySubmittedDialog, InstapayStatusLookup, submitInstapay, type InstapaySubmissionInput, type InstapayResult } from './InstapayFeature';
 import { StaffManagement } from './StaffManagement';
 import OverviewDashboard from './OverviewDashboard';
 
@@ -383,6 +384,7 @@ const AVAILABLE_PERMISSIONS: PermissionOption[] = [
   { id: 'manage_operations', label: 'إدارة سجل العمليات' },
   { id: 'manage_users', label: 'إدارة المستخدمين' },
   { id: 'manage_payments', label: 'إدارة المدفوعات' },
+  { id: 'review_instapay', label: 'مراجعة مدفوعات إنستاباي' },
   { id: 'view_audit_log', label: 'سجل العمليات (Audit Log)' },
 ];
 
@@ -569,7 +571,7 @@ const BookingModal = ({
     onClose: () => void; 
     doctor?: Doctor | null; 
     services: ServiceItem[];
-    onConfirm: (data: Omit<Booking, 'id' | 'createdAt' | 'status'>) => void;
+    onConfirm: (data: Omit<Booking, 'id' | 'createdAt' | 'status'> & { instapay?: InstapaySubmissionInput }) => void;
     initialData?: Booking | null;
     doctors: Doctor[];
     bookings: Booking[];
@@ -598,6 +600,12 @@ const BookingModal = ({
     const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Form, 2: Payment Selection, 3: Payment Details
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'instapay' | 'wallet'>('cash');
     const [copied, setCopied] = useState<string | null>(null);
+
+    // InstaPay transfer details (optional evidence for manual accounting review)
+    const [transferRef, setTransferRef] = useState('');
+    const [transferAmount, setTransferAmount] = useState('');
+    const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+    const [instapayError, setInstapayError] = useState('');
 
     // Track if initial values have been set to prevent reset during typing
     const hasInitialized = useRef(false);
@@ -1018,6 +1026,11 @@ const BookingModal = ({
 
     const handleFinalConfirm = (overridePaymentMethod?: 'cash' | 'instapay' | 'wallet') => {
         const method = overridePaymentMethod || selectedPaymentMethod;
+        if (method === 'instapay' && !initialData && transferRef.trim().length < 4) {
+            setInstapayError('يرجى إدخال رقم العملية (التحويل) بشكل صحيح');
+            return;
+        }
+        setInstapayError('');
         const status = method === 'cash' ? 'pending' : 'pending'; 
         const composedAddr = `${governorate} - ${center.trim()}`;
         const ageNum = parseInt(age, 10);
@@ -1041,7 +1054,12 @@ const BookingModal = ({
             contractingCompanyId: contractingId,
             contractingDocs: {},
             paymentMethod: method,
-            paymentStatus: status
+            paymentStatus: status,
+            instapay: method === 'instapay' && !initialData ? {
+                transactionRef: transferRef.trim(),
+                declaredAmount: transferAmount.trim() === '' ? undefined : Number(transferAmount),
+                file: evidenceFile
+            } : undefined
         });
         onClose();
     };
@@ -1276,6 +1294,24 @@ const BookingModal = ({
                     <Info size={16} className="shrink-0 mt-0.5" />
                     <p>بعد إتمام التحويل، سيقوم فريق الاستقبال بمراجعة العملية وتأكيد الحجز نهائياً. يرجى الاحتفاظ بصورة التحويل.</p>
                 </div>
+
+                {isInsta && (
+                    <div className="space-y-3 border-t border-gray-100 pt-5">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">رقم العملية / التحويل (إلزامي)</label>
+                            <input type="text" value={transferRef} onChange={e => setTransferRef(e.target.value)} dir="ltr" className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold text-left" placeholder="رقم العملية كما يظهر في تطبيق إنستاباي" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">المبلغ المرسل (اختياري)</label>
+                            <input type="number" min={0} value={transferAmount} onChange={e => setTransferAmount(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none transition-all font-bold" placeholder="مثال: 300" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mr-2">صورة الإيصال (اختياري - صورة أو PDF حتى 5 ميغابايت)</label>
+                            <input type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" onChange={e => setEvidenceFile(e.target.files?.[0] || null)} className="w-full text-sm font-bold text-gray-600 file:ml-3 file:rounded-xl file:border-0 file:bg-purple-50 file:px-4 file:py-2 file:font-bold file:text-purple-700" />
+                        </div>
+                        {instapayError && <p className="text-xs text-red-600 font-bold">{instapayError}</p>}
+                    </div>
+                )}
 
                 <button 
                     onClick={() => handleFinalConfirm()}
@@ -2407,7 +2443,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                     {currentUser.permissions.includes('manage_reminders') && (<button onClick={() => setActiveTab('reminders')} className={tabClass('reminders')}><Smartphone size={20} /> التذكيرات</button>)}
                     {currentUser.permissions.includes('view_reports') && (<button onClick={() => setActiveTab('patient-stats')} className={tabClass('patient-stats')}><PieChart size={20} /> إحصائيات المرضى</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('intelligence')} className={tabClass('intelligence')}><Brain size={20} /> الذكاء الإداري</button>)}
-                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
+                    {(currentUser.role === 'admin' || currentUser.permissions.includes('review_instapay')) && (<button onClick={() => setActiveTab('payments')} className={tabClass('payments')}><CreditCard size={20} /> المدفوعات</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => { setActiveTab('contact-logs'); if (contactLogs.length === 0) fetchContactLogs(); }} className={tabClass('contact-logs')}><History size={20} /> سجل الاتصالات</button>)}
                     <div className="h-px bg-gray-50 mx-4 my-4"></div>
                     {currentUser.permissions.includes('manage_partners') && (<button onClick={() => setActiveTab('partners')} className={tabClass('partners')}><Building2 size={20} /> {t.partners}</button>)}
@@ -3422,6 +3458,8 @@ const MyBookingsView = ({ bookings, phone, setPhone, onSearch, onEditBooking, on
           <p className="text-gray-500 font-bold">لم يتم العثور على حجوزات لهذا الرقم</p>
         </div>
       )}
+
+      <InstapayStatusLookup />
     </section>
   );
 };
@@ -3436,6 +3474,7 @@ const App = () => {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
+  const [instapayResult, setInstapayResult] = useState<InstapayResult | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const [doctors, setDoctors] = useState<Doctor[]>(() => {
@@ -3662,7 +3701,7 @@ const handleNavigate = (sectionId: string) => {
     setIsBookingModalOpen(true);
   };
 
-  const handleConfirmBooking = async (data: Omit<Booking, 'id' | 'createdAt' | 'status'>) => {
+  const handleConfirmBooking = async (data: Omit<Booking, 'id' | 'createdAt' | 'status'> & { instapay?: InstapaySubmissionInput }) => {
     try {
       // Find the doctor's UUID from the doctors table
       const doctorData = realtimeData.doctors.find((d: any) => d.name === data.doctorName);
@@ -3713,12 +3752,17 @@ const handleNavigate = (sectionId: string) => {
           addNotification('تم تعديل الحجز', `تم تعديل حجز المريض ${data.patientName} بنجاح`, 'success');
         }
       } else {
+        const newBookingId = crypto.randomUUID();
         const { error } = await supabase
           .from('bookings')
-          .insert([bookingData] as any);
+          .insert([{ ...bookingData, id: newBookingId } as any]);
           
         if (error) throw error;
         addNotification('حجز جديد', `تم تسجيل حجز جديد للمريض ${data.patientName}`, 'success');
+        if (data.instapay) {
+          const res = await submitInstapay(newBookingId, data.phone, data.instapay);
+          setInstapayResult(res);
+        }
       }
     } catch (error: any) {
       console.error('Error saving booking:', error);
@@ -4016,6 +4060,8 @@ const handleNavigate = (sectionId: string) => {
         bookings={bookings}
         settings={settings}
       />
+
+      <InstapaySubmittedDialog result={instapayResult} onClose={() => setInstapayResult(null)} />
 
       {activeSection !== 'admin' && <AiAssistant language={settings.language} />}
 
