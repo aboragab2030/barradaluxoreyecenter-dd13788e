@@ -18,6 +18,8 @@ export const computeAmountDue = (service: string, servicePrice: number, doctorFe
 
 export type ReviewAction = 'approve' | 'reject' | 'investigate';
 
+export const initialBookingStatus = (method?: string): 'pending' | 'confirmed' => method === 'instapay' ? 'pending' : 'confirmed';
+
 /** Result status of a review action, or an error message when the action is not allowed. */
 export const reviewOutcome = (
   current: InstapayStatus, action: ReviewAction, amountDue: number, verifiedAmount: number | null, reason: string,

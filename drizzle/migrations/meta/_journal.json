@@ -15,6 +15,13 @@
       "when": 1791971943950,
       "tag": "0001_instapay_evidence_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792134170991,
+      "tag": "0002_instapay_approval_confirms_booking",
+      "breakpoints": true
     }
   ]
 }
