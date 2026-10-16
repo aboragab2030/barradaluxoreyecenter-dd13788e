@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef } from '@/barada/instapayRules';
+import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef, initialBookingStatus } from '@/barada/instapayRules';
+
+describe('InstaPay booking confirmation', () => {
+  it('leaves a new InstaPay booking pending until review', () => {
+    expect(initialBookingStatus('instapay')).toBe('pending');
+  });
+  it('preserves immediate cash confirmation', () => {
+    expect(initialBookingStatus('cash')).toBe('confirmed');
+  });
+});
 
 describe('InstaPay amount due', () => {
   it('adds service price and doctor fee', () => {

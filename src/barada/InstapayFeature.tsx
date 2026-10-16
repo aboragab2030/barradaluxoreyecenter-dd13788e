@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { reportTable } from './printReports';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X } from 'lucide-react';
+import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X, Printer } from 'lucide-react';
 import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction } from './instapayRules';
 
 export interface InstapaySubmissionInput { transactionRef: string; declaredAmount?: number; file?: File | null }
@@ -107,7 +109,7 @@ interface Submission {
 interface AuditEvent { id: string; event_type: string; actor_name: string; previous_status: string | null; new_status: string | null; reason: string | null; created_at: string }
 
 /** Accounting review panel, placed inside the existing payments section. */
-export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: string; inputClass: string }) => {
+export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed }: { cardClass: string; inputClass: string; onPrint: (title: string, content: string) => void; onReviewed: () => void }) => {
   const [rows, setRows] = useState<Submission[]>([]);
   const [bookings, setBookings] = useState<Record<string, any>>({});
   const [allowed, setAllowed] = useState<boolean | null>(null);
@@ -128,7 +130,8 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     const { data: ok } = await supabase.rpc('can_review_instapay', { _uid: user.id } as any);
     setAllowed(!!ok);
     if (!ok) return;
-    const { data } = await supabase.from('instapay_submissions' as any).select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('instapay_submissions').select('*').order('created_at', { ascending: false });
+    if (error) { setMsg('تعذر تحميل تحويلات إنستاباي. حاول التحديث مرة أخرى.'); return; }
     const list = (data || []) as unknown as Submission[];
     setRows(list);
     const ids = list.map(r => r.booking_id);
@@ -138,6 +141,11 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!allowed) return;
+    const timer = window.setInterval(() => { void load(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [allowed, load]);
 
   const dups = useMemo(() => duplicateTransactionRefs(rows), [rows]);
   const filtered = rows.filter(r => {
@@ -159,6 +167,10 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     const { data } = await supabase.storage.from('instapay-evidence').createSignedUrl(path, 120);
     if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
   };
+  const printRows = (list: Submission[]) => onPrint('تقرير مدفوعات إنستاباي', reportTable(
+    ['رقم الحجز', 'المريض', 'الهاتف', 'الطبيب', 'الموعد', 'رقم العملية', 'المستحق', 'المُعلن', 'المُتحقق', 'الحالة', 'المراجع', 'تاريخ المراجعة', 'ملاحظات'],
+    list.map(r => { const b = bookings[r.booking_id]; return [r.booking_ref, b?.patient_name, b?.phone, b?.doctor_name, `${b?.date ?? ''} ${b?.time ?? ''}`, r.transaction_ref, r.amount_due, r.declared_amount, r.verified_amount, INSTAPAY_STATUS_LABELS[r.status], r.reviewed_by_name, r.reviewed_at, r.reason]; }),
+  ));
   const act = async (action: ReviewAction) => {
     if (!active) return;
     const v = verified.trim() === '' ? null : Number(verified);
@@ -173,6 +185,7 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     }
     setMsg(`تم الحفظ: ${INSTAPAY_STATUS_LABELS[data as InstapayStatus] || data}`);
     await load();
+    onReviewed();
     setActive(null);
   };
 
@@ -185,8 +198,10 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     <div className={`${cardClass} mt-8`} dir="rtl">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold">مراجعة مدفوعات إنستاباي ({filtered.length})</h3>
+        <Button variant="outline" size="icon" title="طباعة مدفوعات إنستاباي" aria-label="طباعة مدفوعات إنستاباي" onClick={() => printRows(filtered)}><Printer size={18} /></Button>
         <button onClick={load} className="text-blue-600 flex items-center gap-2 text-sm font-bold"><RefreshCw size={16} /> تحديث</button>
       </div>
+      {msg && !active && <p role="status" className="text-sm text-muted-foreground mb-4">{msg}</p>}
       <p className="text-xs text-gray-500 font-bold mb-4">يتم التأكيد يدوياً فقط بعد التحقق من وصول المبلغ في كشف حساب المركز. صورة الإيصال وحدها ليست إثباتاً للدفع.</p>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="رقم الحجز أو رقم العملية" className={inputClass} aria-label="بحث" />
@@ -230,11 +245,12 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full p-6 md:p-8 max-h-[90vh] overflow-y-auto relative">
             <button onClick={() => setActive(null)} aria-label="إغلاق" className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-400"><X size={20} /></button>
             <h3 className="text-lg font-black mb-4">مراجعة الحجز <span dir="ltr">{active.booking_ref}</span></h3>
+            <Button variant="outline" size="icon" title="طباعة التحويل" aria-label="طباعة التحويل" onClick={() => printRows([active])}><Printer size={18} /></Button>
             <div className="text-sm space-y-1 mb-4 font-bold text-gray-700">
               <p>رقم العملية: <span dir="ltr">{active.transaction_ref}</span></p>
               <p>المبلغ المستحق: {active.amount_due} ج.م · المُعلن: {active.declared_amount ?? '-'}</p>
               <p>الحالة الحالية: {INSTAPAY_STATUS_LABELS[active.status]}</p>
-              {active.evidence_path && <button onClick={() => viewEvidence(active.evidence_path!)} className="text-blue-600 flex items-center gap-1"><FileText size={14} /> عرض الإيصال المرفق</button>}
+               {active.evidence_path && <button onClick={() => { if (active.evidence_path) void viewEvidence(active.evidence_path); }} className="text-blue-600 flex items-center gap-1"><FileText size={14} /> عرض الإيصال المرفق</button>}
             </div>
             {active.status !== 'PAID' && active.status !== 'REJECTED' && (
               <div className="space-y-3">
