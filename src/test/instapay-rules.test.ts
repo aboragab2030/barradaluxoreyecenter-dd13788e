@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef, initialBookingStatus, instapayDoctorOptions, filterInstapaySubmissions } from '@/barada/instapayRules';
+import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef, initialBookingStatus, instapayDoctorOptions, filterInstapaySubmissions, canDeleteInstapayReview, visibleInstapayReviews } from '@/barada/instapayRules';
+
+describe('administrator-only InstaPay review deletion', () => {
+  it('allows deletion only for a server-confirmed administrator, not staff or unknown users', () => {
+    expect(canDeleteInstapayReview(true)).toBe(true);
+    expect(canDeleteInstapayReview(false)).toBe(false);
+    expect(canDeleteInstapayReview(null)).toBe(false);
+  });
+  it('removes deleted review entries from the list without hiding retained confirmed entries', () => {
+    const rows = [
+      { id: 'deleted', status: 'PAID', deleted_at: '2026-10-17T07:16:00Z' },
+      { id: 'confirmed', status: 'PAID', deleted_at: null },
+      { id: 'pending', status: 'PENDING_REVIEW', deleted_at: null },
+    ];
+    expect(visibleInstapayReviews(rows).map(row => row.id)).toEqual(['confirmed', 'pending']);
+    expect(rows).toHaveLength(3);
+  });
+});
 
 describe('InstaPay booking confirmation', () => {
   it('leaves a new InstaPay booking pending until review', () => {
