@@ -442,8 +442,6 @@ export type Database = {
           booking_ref: string
           created_at: string
           declared_amount: number | null
-          deleted_at: string | null
-          deleted_by: string | null
           evidence_path: string | null
           id: string
           payment_id: string | null
@@ -462,8 +460,6 @@ export type Database = {
           booking_ref: string
           created_at?: string
           declared_amount?: number | null
-          deleted_at?: string | null
-          deleted_by?: string | null
           evidence_path?: string | null
           id?: string
           payment_id?: string | null
@@ -482,8 +478,6 @@ export type Database = {
           booking_ref?: string
           created_at?: string
           declared_amount?: number | null
-          deleted_at?: string | null
-          deleted_by?: string | null
           evidence_path?: string | null
           id?: string
           payment_id?: string | null
@@ -820,10 +814,6 @@ export type Database = {
     }
     Functions: {
       can_review_instapay: { Args: { _uid: string }; Returns: boolean }
-      delete_instapay_submission: {
-        Args: { _submission_id: string }
-        Returns: undefined
-      }
       get_bookings_by_phone: {
         Args: { phone_number: string }
         Returns: {

@@ -20,12 +20,6 @@ export type ReviewAction = 'approve' | 'reject' | 'investigate';
 
 export const initialBookingStatus = (method?: string): 'pending' | 'confirmed' => method === 'instapay' ? 'pending' : 'confirmed';
 
-/** Visibility only; the deletion RPC independently authorizes the administrator. */
-export const canDeleteInstapayReview = (serverConfirmedAdmin: boolean | null): boolean => serverConfirmedAdmin === true;
-
-export const visibleInstapayReviews = <T extends { deleted_at?: string | null }>(rows: T[]): T[] =>
-  rows.filter(row => !row.deleted_at);
-
 /** Result status of a review action, or an error message when the action is not allowed. */
 export const reviewOutcome = (
   current: InstapayStatus, action: ReviewAction, amountDue: number, verifiedAmount: number | null, reason: string,
