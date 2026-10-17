@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef, initialBookingStatus } from '@/barada/instapayRules';
+import { computeAmountDue, reviewOutcome, duplicateTransactionRefs, isDuplicateRef, initialBookingStatus, instapayDoctorOptions, filterInstapaySubmissions } from '@/barada/instapayRules';
 
 describe('InstaPay booking confirmation', () => {
   it('leaves a new InstaPay booking pending until review', () => {
