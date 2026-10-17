@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { reportTable } from './printReports';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X, Printer } from 'lucide-react';
-import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction } from './instapayRules';
+import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction, instapayDoctorOptions, filterInstapaySubmissions } from './instapayRules';
 
 export interface InstapaySubmissionInput { transactionRef: string; declaredAmount?: number; file?: File | null }
 export interface InstapayResult { bookingRef?: string; amountDue?: number; error?: string }
