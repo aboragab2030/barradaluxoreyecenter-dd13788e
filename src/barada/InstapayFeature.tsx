@@ -149,15 +149,12 @@ export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed
   }, [allowed, load]);
 
   const dups = useMemo(() => duplicateTransactionRefs(rows), [rows]);
-  const filtered = rows.filter(r => {
-    const q = search.trim().toLowerCase();
-    if (q && !r.booking_ref.toLowerCase().includes(q) && !r.transaction_ref.toLowerCase().includes(q)) return false;
-    if (status && r.status !== status) return false;
-    const d = r.created_at.slice(0, 10);
-    if (from && d < from) return false;
-    if (to && d > to) return false;
-    return true;
-  });
+  const doctorOf = useCallback((r: Submission) => bookings[r.booking_id]?.doctor_name as string | undefined, [bookings]);
+  const doctorOptions = useMemo(() => instapayDoctorOptions(rows, doctorOf), [rows, doctorOf]);
+  const filtered = useMemo(
+    () => filterInstapaySubmissions(rows, { search, status, from, to, doctor }, doctorOf),
+    [rows, search, status, from, to, doctor, doctorOf],
+  );
 
   const open = async (r: Submission) => {
     setActive(r); setVerified(r.declared_amount?.toString() || ''); setReason(''); setMsg('');
