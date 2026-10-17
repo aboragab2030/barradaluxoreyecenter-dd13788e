@@ -1,5 +1,9 @@
 # Roadmap
 
+## Admin-only InstaPay review deletion
+- [ ] Add server-authorized deletion from review history while retaining linked bookings, payments and audit evidence
+- [ ] Add the delete action for administrators only and verify permissions and deletion
+
 ## InstaPay completion
 - [x] Wire booking inputs, reference, lookup and reviewer permissions
 - [ ] Keep all payment statuses visible and refresh after decisions
