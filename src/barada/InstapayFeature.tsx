@@ -115,6 +115,7 @@ export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [doctor, setDoctor] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [active, setActive] = useState<Submission | null>(null);
