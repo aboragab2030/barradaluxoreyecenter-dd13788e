@@ -1,9 +1,10 @@
 # Roadmap
 
-## InstaPay manual review wiring (in progress)
-- [ ] Add transfer number + amount + optional receipt fields to the InstaPay booking step
-- [ ] Show booking reference + "under review" message to the patient after booking
-- [ ] Put the review panel inside the existing payments section
-- [ ] Put the patient status lookup under "حجوزاتي"
-- [ ] Add "مراجعة مدفوعات إنستاباي" to the staff permissions lists
-- [ ] Run tests and verify in the browser
+## InstaPay manual review
+- [x] Payment step fields, booking reference, review panel, status lookup, staff permission
+- [ ] Add printing to the InstaPay review panel
+- [ ] Remove the confirmed-payments log from the payments section
+- [ ] Add printing to complaints
+- [ ] Change the AI chat button icon on the home page
+- [ ] Real end-to-end test: book with InstaPay, approve from the review panel, confirm the booking becomes confirmed
+- [ ] Delete leftover test booking BR-1C7D93BB
