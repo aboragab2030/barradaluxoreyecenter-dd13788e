@@ -71,7 +71,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ cardClass, inputClass,
   const [searchPhone, setSearchPhone] = useState('');
   const [searchTransactionId, setSearchTransactionId] = useState('');
   const [filterPaymentType, setFilterPaymentType] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [filterStatus, setFilterStatus] = useState('paid'); // Default to showing paid only
 
   // Fetch payments from Supabase
   const fetchPayments = async () => {
@@ -248,7 +248,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ cardClass, inputClass,
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <CreditCard className="text-blue-600" />
-            سجل المدفوعات ({filteredPayments.length})
+            سجل المدفوعات المؤكدة ({filteredPayments.length})
           </h3>
           <div className="flex gap-2">
             <button 
@@ -488,7 +488,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ cardClass, inputClass,
         </div>
       </div>
 
-      <InstapayReviewPanel cardClass={cardClass} inputClass={inputClass} onPrint={onPrint} onReviewed={() => { void fetchPayments(); void fetchNotifications(); }} />
+      <InstapayReviewPanel cardClass={cardClass} inputClass={inputClass} />
     </div>
   );
 };
