@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { reportTable } from './printReports';
 import { supabase } from '@/integrations/supabase/client';
-import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X } from 'lucide-react';
-import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction } from './instapayRules';
+import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X, Printer, Trash2 } from 'lucide-react';
+import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction, instapayDoctorOptions, filterInstapaySubmissions } from './instapayRules';
 
 export interface InstapaySubmissionInput { transactionRef: string; declaredAmount?: number; file?: File | null }
 export interface InstapayResult { bookingRef?: string; amountDue?: number; error?: string }
@@ -107,12 +109,15 @@ interface Submission {
 interface AuditEvent { id: string; event_type: string; actor_name: string; previous_status: string | null; new_status: string | null; reason: string | null; created_at: string }
 
 /** Accounting review panel, placed inside the existing payments section. */
-export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: string; inputClass: string }) => {
+export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed }: { cardClass: string; inputClass: string; onPrint: (title: string, content: string) => void; onReviewed: () => void }) => {
   const [rows, setRows] = useState<Submission[]>([]);
   const [bookings, setBookings] = useState<Record<string, any>>({});
   const [allowed, setAllowed] = useState<boolean | null>(null);
+  const [canDelete, setCanDelete] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [doctor, setDoctor] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [active, setActive] = useState<Submission | null>(null);
@@ -124,11 +129,16 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setAllowed(false); return; }
-    const { data: ok } = await supabase.rpc('can_review_instapay', { _uid: user.id } as any);
+    if (!user) { setAllowed(false); setCanDelete(false); return; }
+    const [{ data: ok }, { data: admin, error: roleError }] = await Promise.all([
+      supabase.rpc('can_review_instapay', { _uid: user.id } as any),
+      supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' }),
+    ]);
     setAllowed(!!ok);
+    setCanDelete(!roleError && admin === true);
     if (!ok) return;
-    const { data } = await supabase.from('instapay_submissions' as any).select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('instapay_submissions').select('*').is('deleted_at', null).order('created_at', { ascending: false });
+    if (error) { setMsg('تعذر تحميل تحويلات إنستاباي. حاول التحديث مرة أخرى.'); return; }
     const list = (data || []) as unknown as Submission[];
     setRows(list);
     const ids = list.map(r => r.booking_id);
@@ -138,17 +148,19 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     }
   }, []);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    if (!allowed) return;
+    const timer = window.setInterval(() => { void load(); }, 15000);
+    return () => window.clearInterval(timer);
+  }, [allowed, load]);
 
   const dups = useMemo(() => duplicateTransactionRefs(rows), [rows]);
-  const filtered = rows.filter(r => {
-    const q = search.trim().toLowerCase();
-    if (q && !r.booking_ref.toLowerCase().includes(q) && !r.transaction_ref.toLowerCase().includes(q)) return false;
-    if (status && r.status !== status) return false;
-    const d = r.created_at.slice(0, 10);
-    if (from && d < from) return false;
-    if (to && d > to) return false;
-    return true;
-  });
+  const doctorOf = useCallback((r: Submission) => bookings[r.booking_id]?.doctor_name as string | undefined, [bookings]);
+  const doctorOptions = useMemo(() => instapayDoctorOptions(rows, doctorOf), [rows, doctorOf]);
+  const filtered = useMemo(
+    () => filterInstapaySubmissions(rows, { search, status, from, to, doctor }, doctorOf),
+    [rows, search, status, from, to, doctor, doctorOf],
+  );
 
   const open = async (r: Submission) => {
     setActive(r); setVerified(r.declared_amount?.toString() || ''); setReason(''); setMsg('');
@@ -159,6 +171,10 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     const { data } = await supabase.storage.from('instapay-evidence').createSignedUrl(path, 120);
     if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener');
   };
+  const printRows = (list: Submission[]) => onPrint('تقرير مدفوعات إنستاباي', reportTable(
+    ['رقم الحجز', 'المريض', 'الهاتف', 'الطبيب', 'الموعد', 'رقم العملية', 'المستحق', 'المُعلن', 'المُتحقق', 'الحالة', 'المراجع', 'تاريخ المراجعة', 'ملاحظات'],
+    list.map(r => { const b = bookings[r.booking_id]; return [r.booking_ref, b?.patient_name, b?.phone, b?.doctor_name, `${b?.date ?? ''} ${b?.time ?? ''}`, r.transaction_ref, r.amount_due, r.declared_amount, r.verified_amount, INSTAPAY_STATUS_LABELS[r.status], r.reviewed_by_name, r.reviewed_at, r.reason]; }),
+  ));
   const act = async (action: ReviewAction) => {
     if (!active) return;
     const v = verified.trim() === '' ? null : Number(verified);
@@ -173,7 +189,30 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     }
     setMsg(`تم الحفظ: ${INSTAPAY_STATUS_LABELS[data as InstapayStatus] || data}`);
     await load();
+    onReviewed();
     setActive(null);
+  };
+
+  const deleteEntry = async (r: Submission) => {
+    if (!canDelete || deletingId) return;
+    if (!window.confirm(`حذف التحويل المرتبط بالحجز ${r.booking_ref} من سجل مراجعة إنستاباي؟\nسيتم الاحتفاظ بالحجز وسجل الدفع وسجل القرارات.`)) return;
+    setDeletingId(r.id);
+    setMsg('');
+    try {
+      const { error } = await supabase.rpc('delete_instapay_submission', { _submission_id: r.id });
+      if (error) {
+        setMsg(error.code === '42501' ? 'الحذف متاح لمدير النظام فقط.' : 'تعذر حذف السجل. حاول مرة أخرى.');
+        return;
+      }
+      setRows(previous => previous.filter(row => row.id !== r.id));
+      setActive(previous => previous?.id === r.id ? null : previous);
+      setMsg('تم حذف التحويل من سجل المراجعة مع الاحتفاظ بالحجز وسجل الدفع.');
+      await load();
+    } catch {
+      setMsg('تعذر حذف السجل. حاول مرة أخرى.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   if (allowed === null) return null;
@@ -185,14 +224,21 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
     <div className={`${cardClass} mt-8`} dir="rtl">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold">مراجعة مدفوعات إنستاباي ({filtered.length})</h3>
+        <Button variant="outline" size="icon" title="طباعة مدفوعات إنستاباي" aria-label="طباعة مدفوعات إنستاباي" onClick={() => printRows(filtered)}><Printer size={18} /></Button>
         <button onClick={load} className="text-blue-600 flex items-center gap-2 text-sm font-bold"><RefreshCw size={16} /> تحديث</button>
       </div>
+      {msg && !active && <p role="status" className="text-sm text-muted-foreground mb-4">{msg}</p>}
       <p className="text-xs text-gray-500 font-bold mb-4">يتم التأكيد يدوياً فقط بعد التحقق من وصول المبلغ في كشف حساب المركز. صورة الإيصال وحدها ليست إثباتاً للدفع.</p>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="رقم الحجز أو رقم العملية" className={inputClass} aria-label="بحث" />
         <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass} aria-label="الحالة">
           <option value="">كل الحالات</option>
           {Object.entries(INSTAPAY_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+        <select value={doctor} onChange={e => setDoctor(e.target.value)} className={inputClass} aria-label="الطبيب">
+          <option value="">كل الأطباء</option>
+          {doctorOptions.map(d => <option key={d} value={d}>{d}</option>)}
+          {doctor && !doctorOptions.includes(doctor) && <option value={doctor}>{doctor}</option>}
         </select>
         <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={inputClass} aria-label="من تاريخ" />
         <input type="date" value={to} onChange={e => setTo(e.target.value)} className={inputClass} aria-label="إلى تاريخ" />
@@ -216,7 +262,9 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
                   <td className="p-3">{r.declared_amount ?? '-'}{amountWarn && <span className="block text-[10px] text-amber-600 font-bold">لا يطابق المستحق</span>}</td>
                   <td className="p-3">{r.verified_amount ?? '-'}</td>
                   <td className="p-3"><span className={`text-xs px-2 py-1 rounded-lg border font-bold ${statusClass(r.status)}`}>{INSTAPAY_STATUS_LABELS[r.status]}</span></td>
-                  <td className="p-3"><button onClick={() => open(r)} className="text-blue-600 font-bold text-xs">مراجعة</button></td>
+                  <td className="p-3"><div className="flex items-center gap-2"><button onClick={() => open(r)} className="text-blue-600 font-bold text-xs">مراجعة</button>
+                    {canDelete && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" title="حذف من سجل المراجعة" aria-label={`حذف التحويل ${r.booking_ref}`} disabled={deletingId !== null} onClick={() => void deleteEntry(r)}><Trash2 size={16} /></Button>}
+                  </div></td>
                 </tr>
               );
             })}
@@ -230,11 +278,12 @@ export const InstapayReviewPanel = ({ cardClass, inputClass }: { cardClass: stri
           <div className="bg-white rounded-[2rem] shadow-2xl max-w-lg w-full p-6 md:p-8 max-h-[90vh] overflow-y-auto relative">
             <button onClick={() => setActive(null)} aria-label="إغلاق" className="absolute top-4 left-4 p-2 rounded-full hover:bg-gray-100 text-gray-400"><X size={20} /></button>
             <h3 className="text-lg font-black mb-4">مراجعة الحجز <span dir="ltr">{active.booking_ref}</span></h3>
+            <Button variant="outline" size="icon" title="طباعة التحويل" aria-label="طباعة التحويل" onClick={() => printRows([active])}><Printer size={18} /></Button>
             <div className="text-sm space-y-1 mb-4 font-bold text-gray-700">
               <p>رقم العملية: <span dir="ltr">{active.transaction_ref}</span></p>
               <p>المبلغ المستحق: {active.amount_due} ج.م · المُعلن: {active.declared_amount ?? '-'}</p>
               <p>الحالة الحالية: {INSTAPAY_STATUS_LABELS[active.status]}</p>
-              {active.evidence_path && <button onClick={() => viewEvidence(active.evidence_path!)} className="text-blue-600 flex items-center gap-1"><FileText size={14} /> عرض الإيصال المرفق</button>}
+               {active.evidence_path && <button onClick={() => { if (active.evidence_path) void viewEvidence(active.evidence_path); }} className="text-blue-600 flex items-center gap-1"><FileText size={14} /> عرض الإيصال المرفق</button>}
             </div>
             {active.status !== 'PAID' && active.status !== 'REJECTED' && (
               <div className="space-y-3">

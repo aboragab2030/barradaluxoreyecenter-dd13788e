@@ -11,7 +11,7 @@ import { EGYPT_CENTERS } from './egyptData';
 import PatientStats from './PatientStats';
 import ManagementIntelligence from './ManagementIntelligence';
 import { 
-  Eye, Calendar, Phone, MapPin, Send, Sparkles, Menu, X, 
+  Eye, Calendar, Phone, MapPin, Send, Sparkles, Bot, Menu, X, 
   Activity, Clock, UserPlus, Users, Settings, Trash2, 
   CheckCircle, AlertCircle, Lock, LogOut, UserCog, Shield, 
   MessageSquare, List, Search, ImageIcon, Plus, 
@@ -34,6 +34,9 @@ import {
 
 import { ContractingSelector, ContractingManager, ContractingCompany, ContractingManagement } from './contracting';
 import { PaymentsTab } from './PaymentsTab';
+import { Button } from '@/components/ui/button';
+import { reportTable } from './printReports';
+import { initialBookingStatus } from './instapayRules';
 import { InstapaySubmittedDialog, InstapayStatusLookup, submitInstapay, type InstapaySubmissionInput, type InstapayResult } from './InstapayFeature';
 import { StaffManagement } from './StaffManagement';
 import OverviewDashboard from './OverviewDashboard';
@@ -1902,7 +1905,7 @@ const AiAssistant = ({ language }: { language: 'ar' | 'en' }) => {
     <>
       <div className={`fixed bottom-6 left-6 z-[60] transition-all duration-300 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
         <button onClick={() => setIsOpen(true)} className="bg-blue-600 text-white p-4 rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all hover:scale-110 animate-bounce" title={language === 'ar' ? "المساعد الذكي" : "Smart Assistant"}>
-           <Sparkles size={28} />
+           <Bot size={28} />
         </button>
       </div>
       <div className={`fixed bottom-24 left-6 z-[60] w-[350px] max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-300 origin-bottom-left flex flex-col ${isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-10 pointer-events-none'}`}>
@@ -2873,6 +2876,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                   <div className="space-y-8 animate-in fade-in duration-300">
                     <div className={cardClass}>
                        <h3 className="text-xl font-bold mb-6">صندوق الشكاوى والمقترحات ({filteredComplaints.length})</h3>
+                       <Button variant="outline" size="icon" className="mb-4" title="طباعة الشكاوى والمقترحات" aria-label="طباعة الشكاوى والمقترحات" onClick={() => handlePrint('تقرير الشكاوى والمقترحات', reportTable(['الاسم', 'الهاتف', 'النوع', 'التاريخ', 'الرسالة'], filteredComplaints.map(c => [c.name, c.phone, c.type === 'complaint' ? 'شكوى' : 'اقتراح', c.date, c.message])))}><Printer size={18} /></Button>
                        <div className="flex gap-4 mb-6">
                           <input type="text" placeholder="بحث بالاسم أو الهاتف..." value={complaintSearch} onChange={e => setComplaintSearch(e.target.value)} className={inputClass} />
                           <input type="date" value={complaintStart} onChange={e => setComplaintStart(e.target.value)} className={inputClass} />
@@ -3729,7 +3733,7 @@ const handleNavigate = (sectionId: string) => {
         contracting_docs: data.contractingDocs || null,
         payment_method: data.paymentMethod || null,
         payment_status: data.paymentStatus || 'pending',
-        status: 'confirmed',
+        status: data.paymentMethod === 'instapay' ? (editingBooking?.status ?? initialBookingStatus(data.paymentMethod)) : 'confirmed',
       };
       
       if (editingBooking) {
