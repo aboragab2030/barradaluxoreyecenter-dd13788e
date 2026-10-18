@@ -1,5 +1,8 @@
 # Roadmap
 
+## Admin sign-in
+- [ ] Diagnose rejected admin credentials and restore access safely
+
 ## InstaPay completion
 - [x] Wire booking inputs, reference, lookup and reviewer permissions
 - [ ] Keep all payment statuses visible and refresh after decisions
