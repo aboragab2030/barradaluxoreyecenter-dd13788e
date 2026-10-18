@@ -40,31 +40,3 @@ export const duplicateTransactionRefs = (rows: { transaction_ref: string }[]): S
   return new Set([...counts].filter(([, c]) => c > 1).map(([k]) => k));
 };
 export const isDuplicateRef = (dups: Set<string>, ref: string) => dups.has(norm(ref));
-
-export interface InstapayFilters { search: string; status: string; from: string; to: string; doctor: string }
-
-export const EMPTY_INSTAPAY_FILTERS: InstapayFilters = { search: '', status: '', from: '', to: '', doctor: '' };
-
-/** Doctor names that actually have submissions, without blanks and without duplicates. */
-export const instapayDoctorOptions = <T,>(rows: T[], doctorOf: (row: T) => string | null | undefined): string[] => {
-  const seen = new Set<string>();
-  rows.forEach(r => { const d = (doctorOf(r) || '').trim(); if (d) seen.add(d); });
-  return [...seen].sort((a, b) => a.localeCompare(b, 'ar'));
-};
-
-/** Apply the review-panel search, status, date-range and doctor filters. */
-export const filterInstapaySubmissions = <T extends { booking_ref: string; transaction_ref: string; status: string; created_at: string }>(
-  rows: T[], filters: InstapayFilters, doctorOf: (row: T) => string | null | undefined,
-): T[] => {
-  const q = filters.search.trim().toLowerCase();
-  return rows.filter(r => {
-    if (q && !r.booking_ref.toLowerCase().includes(q) && !r.transaction_ref.toLowerCase().includes(q)) return false;
-    if (filters.status && r.status !== filters.status) return false;
-    if (filters.doctor && (doctorOf(r) || '') !== filters.doctor) return false;
-    const d = r.created_at.slice(0, 10);
-    if (filters.from && d < filters.from) return false;
-    if (filters.to && d > filters.to) return false;
-    return true;
-  });
-};
-

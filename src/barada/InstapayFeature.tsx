@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { reportTable } from './printReports';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, CheckCircle, XCircle, AlertTriangle, FileText, History, RefreshCw, X, Printer } from 'lucide-react';
-import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction, instapayDoctorOptions, filterInstapaySubmissions } from './instapayRules';
+import { INSTAPAY_STATUS_LABELS, InstapayStatus, duplicateTransactionRefs, isDuplicateRef, reviewOutcome, ReviewAction } from './instapayRules';
 
 export interface InstapaySubmissionInput { transactionRef: string; declaredAmount?: number; file?: File | null }
 export interface InstapayResult { bookingRef?: string; amountDue?: number; error?: string }
@@ -115,7 +115,6 @@ export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed
   const [allowed, setAllowed] = useState<boolean | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
-  const [doctor, setDoctor] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [active, setActive] = useState<Submission | null>(null);
@@ -149,12 +148,15 @@ export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed
   }, [allowed, load]);
 
   const dups = useMemo(() => duplicateTransactionRefs(rows), [rows]);
-  const doctorOf = useCallback((r: Submission) => bookings[r.booking_id]?.doctor_name as string | undefined, [bookings]);
-  const doctorOptions = useMemo(() => instapayDoctorOptions(rows, doctorOf), [rows, doctorOf]);
-  const filtered = useMemo(
-    () => filterInstapaySubmissions(rows, { search, status, from, to, doctor }, doctorOf),
-    [rows, search, status, from, to, doctor, doctorOf],
-  );
+  const filtered = rows.filter(r => {
+    const q = search.trim().toLowerCase();
+    if (q && !r.booking_ref.toLowerCase().includes(q) && !r.transaction_ref.toLowerCase().includes(q)) return false;
+    if (status && r.status !== status) return false;
+    const d = r.created_at.slice(0, 10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  });
 
   const open = async (r: Submission) => {
     setActive(r); setVerified(r.declared_amount?.toString() || ''); setReason(''); setMsg('');
@@ -201,16 +203,11 @@ export const InstapayReviewPanel = ({ cardClass, inputClass, onPrint, onReviewed
       </div>
       {msg && !active && <p role="status" className="text-sm text-muted-foreground mb-4">{msg}</p>}
       <p className="text-xs text-gray-500 font-bold mb-4">يتم التأكيد يدوياً فقط بعد التحقق من وصول المبلغ في كشف حساب المركز. صورة الإيصال وحدها ليست إثباتاً للدفع.</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="رقم الحجز أو رقم العملية" className={inputClass} aria-label="بحث" />
         <select value={status} onChange={e => setStatus(e.target.value)} className={inputClass} aria-label="الحالة">
           <option value="">كل الحالات</option>
           {Object.entries(INSTAPAY_STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <select value={doctor} onChange={e => setDoctor(e.target.value)} className={inputClass} aria-label="الطبيب">
-          <option value="">كل الأطباء</option>
-          {doctorOptions.map(d => <option key={d} value={d}>{d}</option>)}
-          {doctor && !doctorOptions.includes(doctor) && <option value={doctor}>{doctor}</option>}
         </select>
         <input type="date" value={from} onChange={e => setFrom(e.target.value)} className={inputClass} aria-label="من تاريخ" />
         <input type="date" value={to} onChange={e => setTo(e.target.value)} className={inputClass} aria-label="إلى تاريخ" />
