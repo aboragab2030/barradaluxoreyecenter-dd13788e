@@ -15,6 +15,13 @@
       "when": 1791971943950,
       "tag": "0001_instapay_evidence_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792419549751,
+      "tag": "0002_paymob_gateway",
+      "breakpoints": true
     }
   ]
 }
