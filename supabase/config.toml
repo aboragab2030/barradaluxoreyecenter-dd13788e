@@ -1,1 +1,9 @@
 project_id = "orhtuwiymnkvmchsqzny"
+[functions.paymob-webhook]
+verify_jwt = false
+
+[functions.paymob-create-payment]
+verify_jwt = false
+
+[functions.paymob-settings]
+verify_jwt = false
