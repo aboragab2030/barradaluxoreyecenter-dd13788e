@@ -7,6 +7,7 @@ import {
   Building2, FileText
 } from 'lucide-react';
 import { InstapayReviewPanel } from './InstapayFeature';
+import { PaymobPaymentsList } from './PaymobFeature';
 
 // Types matching DB schema
 interface Payment {
@@ -489,6 +490,7 @@ export const PaymentsTab: React.FC<PaymentsTabProps> = ({ cardClass, inputClass,
       </div>
 
       <InstapayReviewPanel cardClass={cardClass} inputClass={inputClass} />
+      <PaymobPaymentsList cardClass={cardClass} />
     </div>
   );
 };

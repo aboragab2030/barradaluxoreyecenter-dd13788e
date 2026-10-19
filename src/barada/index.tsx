@@ -35,6 +35,7 @@ import {
 import { ContractingSelector, ContractingManager, ContractingCompany, ContractingManagement } from './contracting';
 import { PaymentsTab } from './PaymentsTab';
 import { InstapaySubmittedDialog, InstapayStatusLookup, submitInstapay, type InstapaySubmissionInput, type InstapayResult } from './InstapayFeature';
+import { usePaymobEnabled, startPaymobCheckout, PaymobResultDialog, PaymobSettingsPanel } from './PaymobFeature';
 import { StaffManagement } from './StaffManagement';
 import OverviewDashboard from './OverviewDashboard';
 
@@ -115,7 +116,7 @@ interface Booking {
   reminderType?: 'sms' | 'email' | 'none';
   contractingCompanyId?: number;
   contractingDocs?: Record<string, string>;
-  paymentMethod?: 'cash' | 'instapay' | 'wallet';
+  paymentMethod?: 'cash' | 'instapay' | 'wallet' | 'paymob';
   paymentStatus?: 'pending' | 'paid';
 }
 
@@ -598,7 +599,8 @@ const BookingModal = ({
 
     // Payment Flow State
     const [step, setStep] = useState<1 | 2 | 3>(1); // 1: Form, 2: Payment Selection, 3: Payment Details
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'instapay' | 'wallet'>('cash');
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'instapay' | 'wallet' | 'paymob'>('cash');
+    const paymobEnabled = usePaymobEnabled();
     const [copied, setCopied] = useState<string | null>(null);
 
     // InstaPay transfer details (optional evidence for manual accounting review)
@@ -1024,7 +1026,7 @@ const BookingModal = ({
         }
     };
 
-    const handleFinalConfirm = (overridePaymentMethod?: 'cash' | 'instapay' | 'wallet') => {
+    const handleFinalConfirm = (overridePaymentMethod?: 'cash' | 'instapay' | 'wallet' | 'paymob') => {
         const method = overridePaymentMethod || selectedPaymentMethod;
         if (method === 'instapay' && !initialData && transferRef.trim().length < 4) {
             setInstapayError('يرجى إدخال رقم العملية (التحويل) بشكل صحيح');
@@ -1250,6 +1252,21 @@ const BookingModal = ({
                         <p className="text-xs text-gray-500">فودافون كاش، اتصالات، أورانج</p>
                     </div>
                 </button>
+
+                {paymobEnabled && !initialData && (
+                <button 
+                    onClick={() => { setSelectedPaymentMethod('paymob'); handleFinalConfirm('paymob'); }}
+                    className="p-5 rounded-2xl border-2 border-gray-100 hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-4 group text-right"
+                >
+                    <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <CreditCard size={24} />
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-gray-900">الدفع أونلاين (بطاقة / محفظة إلكترونية)</h4>
+                        <p className="text-xs text-gray-500">ادفع الآن ويتم تأكيد الحجز تلقائياً</p>
+                    </div>
+                </button>
+                )}
             </div>
         </div>
     );
@@ -1957,7 +1974,7 @@ const AdminPanel = ({
   // Access realtime data for Supabase operations
   const { data: realtimeData } = useRealtimeSync({ enabled: true });
   
-  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'patient-stats' | 'intelligence' | 'payments' | 'contact-logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'doctors' | 'users' | 'bookings' | 'reports' | 'hero-images' | 'partners' | 'settings' | 'services' | 'complaints' | 'reminders' | 'backup' | 'operations' | 'patient-stats' | 'intelligence' | 'payments' | 'contact-logs' | 'paymob-settings'>('overview');
   const [contactLogs, setContactLogs] = useState<any[]>([]);
   const [contactLogsLoading, setContactLogsLoading] = useState(false);
   const [newDoctor, setNewDoctor] = useState({ name: '', specialty: '', image: '', maxPatients: 10, fee: 150, availableDates: [] as string[], patientsPerHour: 4, topSpecialtiesStr: '', experience: 10, education: '', followUpExamCount: 2, followUpSurgeryCount: 3 });
@@ -2454,6 +2471,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('users')} className={tabClass('users')}><UserCog size={20} /> المستخدمين</button>)}
                     {currentUser.permissions.includes('manage_settings') && (<button onClick={() => setActiveTab('settings')} className={tabClass('settings')}><Settings size={20} /> {t.settings}</button>)}
                     {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('backup')} className={tabClass('backup')}><Database size={20} /> النسخ الاحتياطي</button>)}
+                    {currentUser.role === 'admin' && (<button onClick={() => setActiveTab('paymob-settings')} className={tabClass('paymob-settings')}><CreditCard size={20} /> إعدادات الدفع الإلكتروني</button>)}
                 </div>
             </aside>
             <main className="flex-1 min-w-0">
@@ -2515,7 +2533,7 @@ const handlePrint = (title: string, contentHtml: string) => {
                         {booking.paymentMethod && (
                             <div className="mt-1 flex items-center gap-1">
                                 <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold ${booking.paymentMethod === 'cash' ? 'bg-green-50 text-green-600' : booking.paymentMethod === 'instapay' ? 'bg-purple-50 text-purple-600' : 'bg-orange-50 text-orange-600'}`}>
-                                    {booking.paymentMethod === 'cash' ? 'نقداً' : booking.paymentMethod === 'instapay' ? 'InstaPay' : 'Wallet'}
+                                    {booking.paymentMethod === 'cash' ? 'نقداً' : booking.paymentMethod === 'instapay' ? 'InstaPay' : booking.paymentMethod === 'paymob' ? 'Paymob' : 'Wallet'}
                                 </span>
                                 {booking.paymentMethod !== 'cash' && (
                                     <span className={`text-[9px] px-2 py-0.5 rounded-md font-bold border ${booking.paymentStatus === 'paid' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
@@ -3123,6 +3141,9 @@ const handlePrint = (title: string, contentHtml: string) => {
                     onPrint={handlePrint}
                   />
                 )}
+                {activeTab === 'paymob-settings' && currentUser.role === 'admin' && (
+                   <PaymobSettingsPanel cardClass={cardClass} inputClass={inputClass} />
+                )}
                 {activeTab === 'payments' && (
                    <PaymentsTab 
                      cardClass={cardClass} 
@@ -3475,6 +3496,7 @@ const App = () => {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
   const [instapayResult, setInstapayResult] = useState<InstapayResult | null>(null);
+  const [paymobRedirecting, setPaymobRedirecting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   const [doctors, setDoctors] = useState<Doctor[]>(() => {
@@ -3762,6 +3784,16 @@ const handleNavigate = (sectionId: string) => {
         if (data.instapay) {
           const res = await submitInstapay(newBookingId, data.phone, data.instapay);
           setInstapayResult(res);
+        }
+        if (data.paymentMethod === 'paymob') {
+          setPaymobRedirecting(true);
+          const res = await startPaymobCheckout(newBookingId, data.phone);
+          if (res.url) {
+            window.location.href = res.url;
+          } else {
+            setPaymobRedirecting(false);
+            alert(`تم تسجيل الحجز، لكن ${res.error || 'تعذر فتح صفحة الدفع'}. يمكنك الدفع نقداً عند الحضور.`);
+          }
         }
       }
     } catch (error: any) {
@@ -4062,6 +4094,15 @@ const handleNavigate = (sectionId: string) => {
       />
 
       <InstapaySubmittedDialog result={instapayResult} onClose={() => setInstapayResult(null)} />
+      <PaymobResultDialog />
+      {paymobRedirecting && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="status" dir="rtl">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-w-sm w-full p-8 text-center">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="font-black text-gray-900">جاري تحويلك إلى صفحة الدفع الآمنة…</p>
+          </div>
+        </div>
+      )}
 
       {activeSection !== 'admin' && <AiAssistant language={settings.language} />}
 

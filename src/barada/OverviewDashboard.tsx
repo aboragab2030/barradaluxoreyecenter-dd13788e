@@ -25,7 +25,7 @@ interface Booking {
   reminderSent?: boolean;
   reminderType?: 'sms' | 'email' | 'none';
   bookingType?: 'cash' | 'contract';
-  paymentMethod?: 'cash' | 'instapay' | 'wallet';
+  paymentMethod?: 'cash' | 'instapay' | 'wallet' | 'paymob';
   paymentStatus?: 'pending' | 'paid';
   contractingCompanyId?: number;
   notes?: string;
